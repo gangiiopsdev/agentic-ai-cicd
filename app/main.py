@@ -1,7 +1,22 @@
 from fastapi import FastAPI
 import subprocess
+class PingService:
+    def __init__(self):
+        self.allowed_hosts = ['127.0.0.1']  # Define allowed hosts here
+
+    async def ping(self, host: str) -> dict:
+        if host not in self.allowed_hosts or not self.is_valid_host(host):
+            return {'status': 'unauthorized'}
+        result = subprocess.run(['ping', '-c', '4', host], capture_output=True, text=True)
+        return {'status': 'completed', 'output': result.stdout}
+
+    def is_valid_host(self, host: str) -> bool:
+        import re
+        pattern = r'^[0-9]{1,3}\.[0-9]{1,3}\.([0-9]{1,3})\.[0-9]{1,3}$'
+        return re.match(pattern, host)
 
 app = FastAPI()
+ping_service = PingService()
 
 @app.get("/")
 def home():
@@ -9,8 +24,4 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    return ping_service.ping(host)
