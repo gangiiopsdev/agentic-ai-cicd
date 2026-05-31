@@ -1,7 +1,11 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
 
 app = FastAPI()
+
+def escape_shell_arg(arg):
+    return arg.replace(';', ' ').replace('&', ' ').replace('|', ' ') if isinstance(arg, str) else arg
 
 @app.get("/")
 def home():
@@ -9,8 +13,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    args = ['ping', escape_shell_arg(host)]
+    subprocess.call(shlex.split(' '.join(args)))
     return {"status": "completed"}
