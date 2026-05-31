@@ -1,16 +1,28 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+
+def validate_host(host):
+    if not host.strip().isdigit():
+        raise ValueError("Invalid host input")
+    return host
+
+class PingCommand:
+    def __init__(self, host):
+        self.host = validate_host(host)
+
+    def run(self):
+        args = shlex.split('ping ' + str(self.host))
+        result = subprocess.run(args, capture_output=True, text=True, check=False)
+        if result.returncode != 0:
+            return {"status": "failed", "error": result.stderr}
+        return {"status": "completed", "output": result.stdout}
 
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        command = PingCommand(host)
+        return command.run()
+    except Exception as e:
+        return {"status": "failed", "error": str(e)}
