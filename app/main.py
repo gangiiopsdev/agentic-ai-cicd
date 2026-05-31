@@ -3,14 +3,12 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def escape_host(host):
+    host = host.replace('\', '/').replace(';', '').replace('&', '').replace('|', '')
+    return host
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    escaped_host = escape_host(host)
+    subprocess.call(['ping', escaped_host])  # Use a list for the command to avoid shell injection
     return {"status": "completed"}
