@@ -52,7 +52,7 @@ def get_token_source():
 def get_github_client(token: str):
     try:
         from github import Auth
-n        return Github(auth=Auth.Token(token))
+        return Github(auth=Auth.Token(token))
     except Exception:
         return Github(token)
 
