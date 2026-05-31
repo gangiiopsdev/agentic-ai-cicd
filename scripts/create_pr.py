@@ -39,7 +39,15 @@ if not fixed_code:
     sys.exit(0)
 
 # ---------- Connect to GitHub ----------
-g = Github(TOKEN)
+# Use modern PyGithub auth when available to avoid deprecation warnings.
+try:
+    # PyGithub >= 2.0 provides Auth and token-based auth via Github(auth=...)
+    from github import Auth
+    g = Github(auth=Auth.Token(TOKEN))
+except Exception:
+    # Fall back to older constructor (keeps compatibility with older PyGithub)
+    g = Github(TOKEN)
+
 repo = g.get_repo(REPO_NAME)
 
 timestamp = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
@@ -120,5 +128,21 @@ try:
         print("⚠️  Could not add labels (labels may not exist in repo)")
 
 except GithubException as e:
-    print(f"❌ PR creation failed: {e}")
+    # Provide actionable guidance when GitHub Actions is not allowed to create PRs.
+    msg = str(e)
+    print(f"❌ PR creation failed: {msg}")
+
+    # Common CI cause: GITHUB_TOKEN permissions or repo/org settings block Actions from creating PRs.
+    if 'GitHub Actions is not permitted to create or approve pull requests' in msg or 'is not permitted to create or approve pull requests' in msg:
+        print('\nPossible resolutions:')
+        print('- Give the workflow `pull-requests: write` and `contents: write` permissions in your workflow YAML:')
+        print('  permissions:')
+        print('    contents: write')
+        print('    pull-requests: write')
+        print('\n- Or create a Personal Access Token (classic) or fine-grained token with `repo` scope,')
+        print('  store it as a repository secret (e.g. `PAT_TOKEN`) and set the Actions step to use it:')
+        print('  env:')
+        print('    GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}')
+        print('\n- If this repo is in an organization, ensure the organization allows workflows to create PRs (organization settings).')
+
     sys.exit(1)
