@@ -3,8 +3,9 @@ on:
   push:
   pull_request:
 permissions:
-  contents: write      
+  contents: write
   pull-requests: write
+  checks: write
 jobs:
   security-agent:
     runs-on: ubuntu-latest
