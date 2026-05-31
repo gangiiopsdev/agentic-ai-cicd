@@ -48,13 +48,21 @@ jobs:
         run: |
           python scripts/decision_engine.py
 
-      - name: Create Remediation PR
-        if: always()
-        run: |
-          python scripts/create_pr.py
+      - name: Create Remediation PR (PAT)
+        if: env.PAT_TOKEN != ''
         env:
           PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python scripts/create_pr.py
+
+      - name: Create Remediation PR (default token)
+        if: env.PAT_TOKEN == ''
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python scripts/create_pr.py
 
       - name: Upload Reports
         if: always()
