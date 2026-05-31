@@ -10,7 +10,7 @@ def home():
 @app.get("/ping")
 def ping(host: str):
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    # Secure implementation using subprocess.run with shell=False and appropriate arguments
+    subprocess.run(["ping", host], check=True, text=True)
 
     return {"status": "completed"}
