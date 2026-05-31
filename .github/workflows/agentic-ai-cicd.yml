@@ -48,8 +48,15 @@ jobs:
         run: |
           python scripts/decision_engine.py
 
-      - name: Create Remediation PR
-        if: always()
+      - name: Create Remediation PR (PAT)
+        if: ${{ secrets.PAT_TOKEN != '' }}
+        run: |
+          python scripts/create_pr.py
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+
+      - name: Create Remediation PR (default token)
+        if: ${{ secrets.PAT_TOKEN == '' }}
         run: |
           python scripts/create_pr.py
         env:
