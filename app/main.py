@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+cimport = subprocess.call
 
 app = FastAPI()
 
@@ -9,8 +10,9 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Use a whitelist of allowed hosts to prevent command injection
+    if host in ['localhost', '127.0.0.1']:
+        cimport(f"ping {host}")
+    else:
+        return {"error": "Invalid host specified"}
     return {"status": "completed"}
