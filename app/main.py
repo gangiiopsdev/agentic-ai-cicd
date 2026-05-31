@@ -3,14 +3,21 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
+def ping(host: str):
+    # Safe implementation
+    args = ['ping', host]
+    subprocess.run(args)
+
+@app.get="/ping")
 def home():
     return {"message": "Agentic Self-Healing Pipeline"}
 
 @app.get("/ping")
-def ping(host: str):
+def ping_safe(host: str):
+    # Safe implementation
+    args = ['ping', host]
+    subprocess.run(args)
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run(app, host='0.0.0.0', port=80)
