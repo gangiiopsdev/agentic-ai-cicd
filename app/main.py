@@ -1,16 +1,10 @@
 from fastapi import FastAPI
 import subprocess
-
+ guarded_hosts = ['example.com', 'localhost']  # Define a list of allowed hosts
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if host not in guarded_hosts:
+        raise Exception('Invalid host')
+    subprocess.run(['ping', '-c', '1', host], check=True)
+    return {'status': 'completed'}
