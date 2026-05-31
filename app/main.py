@@ -1,16 +1,18 @@
 from fastapi import FastAPI
 import subprocess
 
-app = FastAPI()
+def get_ip(host):
+    # Secure implementation using check_output and avoiding shell=True
+    result = subprocess.check_output(['ping', '-c', '1', host], stderr=subprocess.STDOUT, text=True)
+    return result
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+global app
+app = FastAPI()
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        result = get_ip(host)
+        return {'status': 'completed', 'result': result}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'error', 'message': str(e)}
