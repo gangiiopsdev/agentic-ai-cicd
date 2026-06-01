@@ -1,16 +1,23 @@
 from fastapi import FastAPI
 import subprocess
+class PingCommand:
+    def __init__(self, host):
+        self.host = host
+
+    def execute(self):
+        # Sanitize the host input before using it in the command
+        if not is_valid_host(self.host):
+            raise Exception("Invalid host")
+        return subprocess.run(['ping', self.host], capture_output=True, text=True)
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
 def ping(host: str):
+    command = PingCommand(host)
+    result = command.execute()
+    return {"status": "completed", "output": result.stdout}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def is_valid_host(host: str) -> bool:
+    # Add your validation logic here
+    return True
