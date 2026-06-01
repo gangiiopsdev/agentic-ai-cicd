@@ -1,16 +1,25 @@
 from fastapi import FastAPI
-import subprocess
+import asyncio
+import shlex
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def sanitize_input(input_str):
+    if not input_str.isalnum():
+        raise ValueError('Invalid input')
+    return input_str
 
-@app.get("/ping")
+async def secure_ping(host: str):
+    sanitized_host = sanitize_input(host)
+    args = shlex.split(f'ping {sanitized_host}')
+    result = await asyncio.create_subprocess_exec(*args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, error = await result.communicate()
+    if result.returncode != 0:
+        return JSONResponse(content={'status': 'error', 'message': str(error.decode())}, status_code=500)
+    return JSONResponse(content={'status': 'completed', 'output': output.decode()})
+
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    response = await secure_ping(host)
+    return response
