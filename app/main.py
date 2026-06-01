@@ -9,8 +9,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    args = ['ping', host]
+    # Sanitize input to prevent command injection
+    sanitized_host = subprocess.list2cmdline(args[1:])
+    subprocess.call(['ping'] + [sanitized_host])
     return {"status": "completed"}
