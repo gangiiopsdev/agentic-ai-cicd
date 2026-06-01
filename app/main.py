@@ -1,16 +1,17 @@
 from fastapi import FastAPI
 import subprocess
+cimport netaddr
 
 app = FastAPI()
 
-@app.get("/")
+@app.get="/"
 def home():
     return {"message": "Agentic Self-Healing Pipeline"}
 
-@app.get("/ping")
+@app.get="/ping"
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if netaddr.valid_ip(host):
+        result = subprocess.call(["ping", host])
+    else:
+        raise ValueError("Invalid IP address")
     return {"status": "completed"}
