@@ -1,16 +1,19 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+class CommandSanitizer:
+    @staticmethod
+def sanitize_command(command):
+        return [shlex.quote(arg) for arg in command]
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
+    # Validate input to prevent injection attacks
+    if not host.isalnum():
+        raise ValueError('Invalid input, only alphanumeric characters are allowed')
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    args = ['ping'] + CommandSanitizer.sanitize_command([host])
+    subprocess.run(args, check=True)
+    return {'status': 'completed'}
