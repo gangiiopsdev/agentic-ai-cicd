@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+import os
 
 app = FastAPI()
 
@@ -9,8 +10,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Secure implementation using shlex.quote to escape the host input
+    if not os.path.exists("/sbin/ping"):
+        raise Exception("Ping executable not found")
+    subprocess.run(["/sbin/ping", shlex.quote(host)], check=True)
     return {"status": "completed"}
