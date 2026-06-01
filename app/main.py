@@ -1,16 +1,14 @@
 from fastapi import FastAPI
 import subprocess
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from starlette.responses import JSONResponse
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+security = HTTPBasic()
 
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+@app.get('/ping')
+def ping(credentials: HTTPBasicCredentials = Depends(security)):
+    host = credentials.username.strip().replace(';', '').replace('&', '')
+    result = subprocess.run(['ping', host], capture_output=True, text=True)
+    return JSONResponse(content={'status': 'completed', 'output': result.stdout}, status_code=result.returncode}
