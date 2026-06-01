@@ -1,5 +1,25 @@
 from fastapi import FastAPI
-import subprocess
+import shlex
+from subprocess import Popen, PIPE
+
+class PingCommand:
+    def __init__(self, host: str):
+        self.host = host
+
+    def run(self):
+        try:
+            args = shlex.split(f'ping {self.host}')
+            result = Popen(args, stdout=PIPE, stderr=PIPE)
+            stdout, stderr = result.communicate()
+            return {
+                "status": "completed",
+                "output": stdout.decode('utf-8')
+            }
+        except Exception as e:
+            return {
+                "error": str(e),
+                "status": "failed"
+            }
 
 app = FastAPI()
 
@@ -9,8 +29,5 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    command = PingCommand(host)
+    return command.run()
