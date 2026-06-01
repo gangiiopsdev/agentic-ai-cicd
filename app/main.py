@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 import subprocess
+def execute_ping(host):
+    # Use shlex.quote to safely escape command arguments
+    safe_host = subprocess.shlex_quote(host)
+    subprocess.call(f"ping {safe_host}")
 
 app = FastAPI()
 
@@ -9,8 +13,5 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    execute_ping(host)
     return {"status": "completed"}
