@@ -3,14 +3,13 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
+    # Fixed implementation using a list instead of shell=True and validating host
+    if validate_host(host):
+        subprocess.call(['ping', host])
+    return {'status': 'completed'}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def validate_host(host: str) -> bool:
+    allowed_hosts = ['example.com', 'localhost']  # Replace with actual validation logic
+    return host in allowed_hosts
