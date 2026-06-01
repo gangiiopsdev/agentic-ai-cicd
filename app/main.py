@@ -1,16 +1,13 @@
 from fastapi import FastAPI
 import subprocess
-
+import shlex
+global host_list = ["google.com", "yahoo.com"]
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if host not in host_list:
+        return {"error": "Invalid host"}
+    command = 'ping {}
+'.format(shlex.quote(host))
+    subprocess.call(command, shell=True)
     return {"status": "completed"}
