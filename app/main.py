@@ -1,16 +1,13 @@
 from fastapi import FastAPI
 import subprocess
+class PingService:
+    def __init__(self):
+        self.ping_command = "ping" if platform.system().lower() == "windows" else "ping -c"
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    service = PingService()
+    subprocess.call([service.ping_command, host])
     return {"status": "completed"}
