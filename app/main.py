@@ -1,7 +1,12 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
 
 app = FastAPI()
+
+def sanitize_input(input_string):
+    # Simple sanitization example: allow only alphanumeric characters and hyphens
+    return ''.join(c for c in input_string if c.isalnum() or c == '-')
 
 @app.get("/")
 def home():
@@ -9,8 +14,9 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        sanitized_host = sanitize_input(host)
+        output = subprocess.run(shlex.split(f'ping {sanitized_host}'), capture_output=True, text=True, check=True)
+        return {"status": "completed", "output": output.stdout}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": e.stderr}
