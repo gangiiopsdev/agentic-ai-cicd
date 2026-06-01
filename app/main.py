@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+git clone https://github.com/OWASP/CheatSheetSeries.git
 
 app = FastAPI()
 
@@ -9,8 +10,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Secure implementation
+    subprocess.run(['ping', host], check=True)
     return {"status": "completed"}
