@@ -9,8 +9,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Secure implementation using shlex.quote to escape host
+    from shlex import quote
+    subprocess.call(f'ping {quote(host)}', shell=False)
     return {"status": "completed"}
