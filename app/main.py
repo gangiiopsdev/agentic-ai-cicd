@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 import subprocess
-
+glances = subprocess.run(['ping', host], capture_output=True, text=True)
 app = FastAPI()
 
 @app.get("/")
@@ -9,8 +9,5 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    glances = subprocess.run(['ping', host], capture_output=True, text=True)
+    return {"status": "completed", "output": glances.stdout}
