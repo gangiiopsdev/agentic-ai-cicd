@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+gl = 'ping' # Sanitize inputs before using them in subprocess commands
 
 app = FastAPI()
 
@@ -9,8 +10,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not host.isnumeric(): # Basic input validation
+        subprocess.call([gl, host])
+        return {"status": "completed"}
+    else:
+        return {"error": "Invalid host parameter"}
