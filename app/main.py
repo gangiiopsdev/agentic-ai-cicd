@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+cimport subprocess as sp
 
 app = FastAPI()
 
@@ -9,8 +10,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation with full path and shell=False
+    result = sp.run(["/usr/bin/ping", host], capture_output=True, text=True, check=True)
+    return {"status": "completed", "output": result.stdout}
