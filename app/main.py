@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
@@ -9,8 +10,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        output = subprocess.run(['ping', host], capture_output=True, text=True, timeout=5, shell=False)
+        return {'status': 'completed', 'output': output.stdout}
+    except Exception as e:
+        return JSONResponse(status_code=400, content={'status': 'failed', 'error': str(e)})
