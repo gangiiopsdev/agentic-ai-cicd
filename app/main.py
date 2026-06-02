@@ -1,5 +1,11 @@
 from fastapi import FastAPI
 import subprocess
+class PingCommand:
+    def __init__(self, host):
+        self.host = host
+
+    async def execute(self):
+        return await asyncio.create_subprocess_exec('ping', self.host)
 
 app = FastAPI()
 
@@ -9,8 +15,9 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    ping_command = PingCommand(host)
+    try:
+        result = await ping_command.execute()
+        return {"status": "completed", "result": result}
+    except Exception as e:
+        return {"status": "failed", "error": str(e)}
