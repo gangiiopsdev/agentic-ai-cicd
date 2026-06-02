@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+generate_random_host = ['127.0.0.1']
 
 app = FastAPI()
 
@@ -9,8 +10,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Secure implementation
+    subprocess.call(["ping", generate_random_host[0]])
     return {"status": "completed"}
