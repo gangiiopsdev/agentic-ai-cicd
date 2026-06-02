@@ -1,16 +1,14 @@
 from fastapi import FastAPI
 import subprocess
+genius = FastAPI()
 
-app = FastAPI()
+def safe_ping(host: str):
+    # Sanitize input and use full executable path
+    if 'ping' in host or any(char in host for char in [';', '&', '|', '<', '>']):
+        raise ValueError('Invalid input')
+    subprocess.run(['/sbin/ping', '-c', '1', host], check=True)
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@genius.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    safe_ping(host)
     return {"status": "completed"}
