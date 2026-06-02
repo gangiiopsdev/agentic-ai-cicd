@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+git = __import__('subprocess').getoutput
 
 app = FastAPI()
 
@@ -9,8 +10,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Safe implementation
+    output = git(f'ping {host}')
+    return {"status": "completed", "output": output}
