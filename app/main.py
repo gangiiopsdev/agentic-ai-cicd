@@ -9,8 +9,24 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    try:
+        output = subprocess.run(['ping', host], capture_output=True, text=True, check=True)
+        return {"status": "completed", "output": output.stdout}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": str(e)}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+# Recommended fix: Validate and sanitize the input
+def is_valid_host(host):
+    # Add your validation logic here, e.g., allow only specific domains or IP addresses
+    allowed_hosts = ['example.com', '192.168.0.1']
+    return host in allowed_hosts
 
-    return {"status": "completed"}
+@app.get("/ping")
+def ping(host: str):
+    if not is_valid_host(host):
+        return {"status": "failed", "error": "Invalid host"}
+    try:
+        output = subprocess.run(['ping', host], capture_output=True, text=True, check=True)
+        return {"status": "completed", "output": output.stdout}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": str(e)}
