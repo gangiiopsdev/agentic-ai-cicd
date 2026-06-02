@@ -1,16 +1,20 @@
 from fastapi import FastAPI
 import subprocess
+from pydantic import BaseModel
+def validate_host(host):
+    # Simple example of host validation; replace with more comprehensive checks
+    return host.startswith('192.168.') or host == 'localhost'
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+class PingRequest(BaseModel):
+    host: str
 
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def ping(request: PingRequest):
+    if validate_host(request.host):
+        args = ['ping', request.host]
+        subprocess.run(args, check=True)
+        return {"status": "completed"}
+    else:
+        return {"error": "Invalid host"}, 400
