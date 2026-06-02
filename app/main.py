@@ -1,16 +1,23 @@
 from fastapi import FastAPI
 import subprocess
+import re
 
 app = FastAPI()
 
-@app.get("/")
+async def safe_ping(host):
+    if re.match(r'^[a-zA-Z0-9.-]+$', host):
+        await asyncio.create_subprocess_exec('ping', host, check=True)
+    else:
+        raise ValueError('Invalid characters in hostname')
+
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        await safe_ping(host)
+        return {'status': 'completed'}
+    except ValueError as e:
+        return {'error': str(e), 'status': 'failed'}
