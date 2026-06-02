@@ -1,16 +1,14 @@
 from fastapi import FastAPI
 import subprocess
+def get_absolute_path(executable):
+    return shutil.which(executable)
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    absolute_path = get_absolute_path('ping')
+    if absolute_path is None:
+        raise ValueError('Ping command not found')
+    subprocess.run([absolute_path, host], check=True, shell=False)
+    return {'status': 'completed'}
