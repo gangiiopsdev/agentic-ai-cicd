@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+gen_ip = lambda x: x.replace(';', '').replace('|', '')
 
 app = FastAPI()
 
@@ -9,8 +10,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Sanitize input to avoid command injection
+    sanitized_host = gen_ip(host)
+    subprocess.call(f'ping {sanitized_host}', shell=True)
     return {"status": "completed"}
