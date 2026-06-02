@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 import subprocess
+def sanitize_input(input_string):
+    return ''.join(e for e in input_string if e.isalnum() or e.isspace())
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+async def safe_ping(host: str):
+    host = subprocess.quote(sanitize_input(host))  # Safely handle user inputs with sanitization
+    try:
+        result = await asyncio.create_subprocess_exec('ping', host, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, _ = await result.communicate()
+        return {'status': 'completed', 'output': output.decode()}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': e.stderr.decode()}
