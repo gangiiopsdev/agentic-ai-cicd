@@ -1,16 +1,14 @@
 from fastapi import FastAPI
 import subprocess
+from pydantic import BaseModel
+globally_allowed_hosts = ['example.com']
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if host not in globally_allowed_hosts:
+        raise HTTPException(status_code=403, detail='Unauthorized host')
+    command = ['ping', '-c', '1', host]
+    subprocess.run(command, check=True, shell=False)
+    return {'status': 'completed'}
