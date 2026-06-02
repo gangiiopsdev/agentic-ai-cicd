@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 import subprocess
+class PingService:
+    def __init__(self):
+        self.ping_path = "/usr/bin/ping"  # Specify the full path to ping to avoid PATH issues
 
 app = FastAPI()
 
@@ -9,8 +12,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    ping_service = PingService()
+    subprocess.run([ping_service.ping_path, host], check=True, text=True)
     return {"status": "completed"}
