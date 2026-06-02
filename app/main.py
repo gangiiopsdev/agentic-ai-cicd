@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+get_running_loop = asyncio.get_running_loop
 
 app = FastAPI()
 
@@ -9,8 +10,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Secure implementation
+    loop = get_running_loop()
+    await loop.run_in_executor(None, subprocess.call, [f'ping', host])
     return {"status": "completed"}
