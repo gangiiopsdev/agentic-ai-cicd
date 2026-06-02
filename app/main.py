@@ -1,16 +1,19 @@
 from fastapi import FastAPI
 import subprocess
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def is_safe_host(host):
+    # Implement your logic to check if the host is safe
+    return True
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not is_safe_host(host):
+        return JSONResponse(content={"error": "Host is not safe"}, status_code=400)
+    try:
+        result = subprocess.run(["ping", host], capture_output=True, text=True, timeout=5, check=True, shell=False)
+        return JSONResponse(content={"status": "completed", "output": result.stdout}, status_code=200)
+    except subprocess.CalledProcessError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
