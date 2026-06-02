@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 import subprocess
+from subprocess import Popen, PIPE
+import shlex
+
+globally_safe_hosts = ['127.0.0.1', '::1']  # List of safe hosts
 
 app = FastAPI()
 
@@ -9,8 +13,11 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if host in globally_safe_hosts:
+        try:
+            result = subprocess.run(shlex.split(f'ping "{host}"'), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+            return {"status": "completed", "output": result.stdout}
+        except subprocess.CalledProcessError as e:
+            return {"status": "error", "output": e.stderr}
+    else:
+        return {"status": "error", "message": "Unauthorized host"}
