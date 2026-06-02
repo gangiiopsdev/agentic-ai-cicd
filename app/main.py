@@ -1,16 +1,21 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+def ping(host: str):
+    try:
+        command = 'ping ' + shlex.quote(host)
+        output = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+        return {'status': 'completed', 'output': output.stdout}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': str(e)}
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def ping_handler(host: str):
+    if not is_valid_host(host):
+        raise ValueError("Invalid host")
+    return ping(host)
+def is_valid_host(host: str):
+    # Implement your validation logic here, e.g., checking for common attack vectors.
+    return True
