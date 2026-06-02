@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+c import ping3
 
 app = FastAPI()
 
@@ -9,8 +10,9 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    response_time = ping3.ping(host)
+    if response_time is None:
+        status = "failed"
+    else:
+        status = "completed"
+    return {"status": status}
