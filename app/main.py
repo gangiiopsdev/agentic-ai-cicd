@@ -1,16 +1,19 @@
 from fastapi import FastAPI
 import subprocess
+from os.path import abspath, dirname, join
 
 app = FastAPI()
 
-@app.get("/")
+@app.get="/"
 def home():
     return {"message": "Agentic Self-Healing Pipeline"}
 
-@app.get("/ping")
+@app.get="/ping"
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation
+    safe_host = subprocess.quote(host)
+    try:
+        result = subprocess.run([abspath(join(dirname(__file__), 'ping')), safe_host], check=True, capture_output=True, text=True)
+        return {"status": "completed", "output": result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {"status": "error", "error": str(e)}
