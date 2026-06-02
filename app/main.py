@@ -1,7 +1,14 @@
 from fastapi import FastAPI
 import subprocess
+from urllib.parse import quote
 
 app = FastAPI()
+
+def ping(host: str):
+    # Sanitize the host input before using it in the subprocess call
+    safe_host = ''.join(c for c in host if c.isalnum() or c.isdigit() or c == '.' or c == '-' or c == '_')
+    args = ['ping', '--count=1', quote(safe_host)]
+    subprocess.run(args, check=True)
 
 @app.get("/")
 def home():
@@ -9,8 +16,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    safe_host = ''.join(c for c in host if c.isalnum() or c.isdigit() or c == '.' or c == '-' or c == '_')
+    args = ['ping', '--count=1', quote(safe_host)]
+    subprocess.run(args, check=True)
     return {"status": "completed"}
