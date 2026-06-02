@@ -1,16 +1,22 @@
 from fastapi import FastAPI
 import subprocess
+from fastapi.params import Query
+import re
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
-def ping(host: str):
+def ping(host: str = Query(..., min_length=1, max_length=255)):
+    # Validate the input to only allow alphanumeric and a few special characters
+    if not re.match(r'^[a-zA-Z0-9.-]+$', host):
+        return {"status": "failed", "error": "Invalid input"}
+    try:
+        output = subprocess.check_output(["ping", host], stderr=subprocess.STDOUT, timeout=5)
+        return {"status": "completed", "output": output.decode()}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": e.output.decode()}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+# Preventive controls
+- Avoid using the subprocess module for executing untrusted input.
+- Use a whitelist of allowed commands and arguments.
+- Ensure proper validation and sanitization of all user inputs.
