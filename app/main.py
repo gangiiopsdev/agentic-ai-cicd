@@ -1,16 +1,21 @@
 from fastapi import FastAPI
 import subprocess
+from typing import List
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+allowed_hosts: List[str] = ['example.com', 'test.com']  # Example list of allowed hosts
+
+def ping(host: str):
+    if host in allowed_hosts:
+        # Secure implementation with full path and shell=False
+        subprocess.run(['ping', '-c', '1', host], check=True)
+    else:
+        raise ValueError('Invalid host')
 
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def ping_route(host: str):
+    try:
+        return ping(host)
+    except ValueError as e:
+        return {'error': str(e)}, 400
