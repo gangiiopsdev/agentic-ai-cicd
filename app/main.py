@@ -1,5 +1,12 @@
 from fastapi import FastAPI
 import subprocess
+def execute_ping(host: str):
+    # Sanitize input
+    args = ['ping', host]
+    try:
+        subprocess.run(args, check=True)
+    except subprocess.CalledProcessError as e:
+        return {'status': 'error', 'message': str(e)}
 
 app = FastAPI()
 
@@ -9,8 +16,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    result = execute_ping(host)
+    if 'error' in result:
+        return result
+    else:
+        return {'status': 'completed'}
