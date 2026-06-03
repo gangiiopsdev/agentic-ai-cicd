@@ -1,16 +1,30 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+class CommandExecutor:
+    def __init__(self):
+        self.command_map = {'ping': self.ping}
 
-app = FastAPI()
+    def execute(self, command: str, host: str):
+        parts = command.split()
+        if parts[0] in self.command_map:
+            return getattr(self, parts[0])(host)
+        else:
+            raise ValueError('Unknown command')
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    def ping(self, host: str):
+        try:
+            output = subprocess.check_output(['ping', shlex.quote(host)], stderr=subprocess.STDOUT, timeout=5, shell=False)
+            return {'status': 'completed', 'output': output.decode()}
+        except subprocess.CalledProcessError as e:
+            return {'status': 'failed', 'error': e.output.decode()}
+class App:
+    def __init__(self):
+        self.executor = CommandExecutor()
 
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    def ping_endpoint(self, command: str, host: str):
+        try:
+            return self.executor.execute(command, host)
+        except Exception as e:
+            return {'status': 'failed', 'error': str(e)}
+app = App()
