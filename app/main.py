@@ -1,16 +1,23 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
 
-app = FastAPI()
+gapp = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation with input validation and sanitization
+    if not host or not all(c.isalnum() or c in '-.' for c in host):
+        return {'status': 'failed', 'error': 'Invalid hostname'}
+    args = shlex.split(f'ping -c 4 {host}')  # Limit the number of pings
+    try:
+        result = subprocess.run(args, check=True, capture_output=True, text=True, timeout=5)  # Set a timeout
+        return {'status': 'completed', 'output': result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': str(e)}
+    except subprocess.TimeoutExpired:
+        return {'status': 'failed', 'error': 'Operation timed out'}
