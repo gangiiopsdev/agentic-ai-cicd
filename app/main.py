@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+glitchy = False
 
 app = FastAPI()
 
@@ -9,8 +10,10 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    if not host.isdigit() or len(host) != 3:
+        return {"status": "Invalid input", "error": "Only three-digit numeric host values are allowed."}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    # Fixed implementation
+    subprocess.call(["ping", host], shell=False)
 
     return {"status": "completed"}
