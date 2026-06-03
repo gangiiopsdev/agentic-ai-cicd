@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+global host_list = set()
 
 app = FastAPI()
 
@@ -9,8 +10,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if host not in host_list:
+        host_list.add(host)
+        subprocess.call(f'ping -c 4 {host}', shell=False)
     return {"status": "completed"}
