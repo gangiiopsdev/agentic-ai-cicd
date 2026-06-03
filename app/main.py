@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+global_params = '-c' if sys.platform == 'win32' else ''
 
 app = FastAPI()
 
@@ -9,8 +10,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Secure implementation
+    subprocess.call(['ping', global_params, host])
     return {"status": "completed"}
