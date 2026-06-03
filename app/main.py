@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+import socket
 
 app = FastAPI()
 
@@ -9,8 +10,16 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    # Secure implementation
+    try:
+        if not host.isdigit() and socket.gethostbyname_ex(host)[2]:
+            result = subprocess.run(['ping', host], capture_output=True, text=True, check=True)
+            return {"status": "completed", "output": result.stdout}
+        else:
+            raise ValueError("Invalid host")
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": str(e)}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run(app, host='127.0.0.1', port=8000)
