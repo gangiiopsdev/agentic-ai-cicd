@@ -1,16 +1,14 @@
 from fastapi import FastAPI
 import subprocess
-
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def validate_host(host: str) -> bool:
+    allowed_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-:_'
+    return all(c in allowed_chars for c in host)
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not validate_host(host):
+        raise ValueError("Invalid host input")
+    result = subprocess.run(['ping', '-c', '1', host], capture_output=True, text=True, check=True)
+    return {"status": "completed", "output": result.stdout}
