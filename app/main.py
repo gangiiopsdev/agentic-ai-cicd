@@ -1,16 +1,14 @@
 from fastapi import FastAPI
 import subprocess
+import os
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Fixed implementation
+    command = ['ping', host]
+    if not os.path.exists(command[0]):
+        raise ValueError(f"Command {command[0]} does not exist")
+    subprocess.run(command, check=True)
     return {"status": "completed"}
