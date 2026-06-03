@@ -1,16 +1,21 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+from pydantic import BaseModel, validator
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+class PingRequest(BaseModel):
+    host: str
+
+    @validator('host')
+    def validate_host(cls, v):
+        if not v.startswith('127.0.0.1'):  # Allow only localhost for simplicity
+            raise ValueError('Only localhost is allowed')
+        return v
 
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def ping(request: PingRequest):
+    args = ['ping', shlex.quote(request.host)]  # Use shlex.quote to safely include the host in the command
+    subprocess.call(args)
+    return {'status': 'completed'}
