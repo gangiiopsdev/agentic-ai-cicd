@@ -1,16 +1,20 @@
 from fastapi import FastAPI
 import subprocess
+def run_ping(host):
+    if not all(c.isalnum() or c in ['-', '_'] for c in host):
+        raise ValueError('Invalid input')
+    return subprocess.call(['ping', '-c', '1', host], shell=False)
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        result = run_ping(host)
+        return {'result': result}
+    except ValueError as e:
+        return {'error': str(e)}, 400
