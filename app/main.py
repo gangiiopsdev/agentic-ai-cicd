@@ -3,14 +3,19 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def safe_ping(host: str):
+    args = ['ping', host]
+    result = subprocess.call(args)
+    return result
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation
+    try:
+        result = safe_ping(host)
+        if result == 0:
+            return {"status": "completed", "result": "Success"}
+        else:
+            return {"status": "failed", "result": "Failure"}
+    except Exception as e:
+        return {"error": str(e)"
