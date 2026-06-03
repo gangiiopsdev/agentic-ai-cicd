@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+global_popen = subprocess.Popen,
 
 app = FastAPI()
 
@@ -9,8 +10,11 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        result = global_popen(['ping', host], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, error = result.communicate()
+        if result.returncode != 0:
+            return {"status": "failed", "error": error.decode('utf-8')}
+        return {"status": "completed", "output": output.decode('utf-8')}
+    except Exception as e:
+        return {"status": "failed", "error": str(e)}
