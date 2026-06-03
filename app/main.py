@@ -1,5 +1,12 @@
 from fastapi import FastAPI
 import subprocess
+from shlex import quote
+def run_ping(host):
+    try:
+        result = subprocess.run(['ping', quote(host)], capture_output=True, text=True, check=True)
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return str(e)
 
 app = FastAPI()
 
@@ -9,8 +16,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not host.isnumeric():  # Simple validation to check if the input is numeric (example)
+        return {"error": "Invalid host input"}
+    output = run_ping(host)
+    return {"status": "completed", "output": output}
