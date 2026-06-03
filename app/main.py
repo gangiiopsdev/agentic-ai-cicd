@@ -1,5 +1,11 @@
 from fastapi import FastAPI
 import subprocess
+def run_command(command):
+    result = subprocess.run(command, capture_output=True, text=True)
+    return result.stdout
+
+global env_vars
+env_vars = {'PATH': os.environ['PATH']}
 
 app = FastAPI()
 
@@ -9,8 +15,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    command = ["ping", host]
+    output = run_command(command)
+    return {"status": "completed", "output": output}
