@@ -1,16 +1,18 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+from pydantic import BaseModel
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+class PingRequest(BaseModel):
+    host: str
 
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+@app.post('/ping', response_model=dict)
+def ping(request: PingRequest):
+    allowed_hosts = ['example.com', 'test.com']  # Add your list of allowed hosts here
+    if not request.host in allowed_hosts:
+        return {'status': 'error', 'message': 'Invalid host'}
+    args = shlex.split(f'ping {shlex.quote(request.host)}')
+    result = subprocess.run(args, capture_output=True, text=True)
+    return {'status': 'completed', 'stdout': result.stdout, 'stderr': result.stderr}
