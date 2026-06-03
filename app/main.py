@@ -1,16 +1,18 @@
 from fastapi import FastAPI
 import subprocess
+def sanitize_input(input_str):
+    # Implement proper sanitization logic here, e.g., using regex or a whitelist.
+    return ''.join(c for c in input_str if c.isalnum())
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Sanitize the host input before using it in subprocess
+    sanitized_host = sanitize_input(host)
+    subprocess.run(['ping', sanitized_host], capture_output=True, text=True)
+    return {'status': 'completed'}
