@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
@@ -9,8 +10,9 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Validate input to prevent injection attacks
+    if not host.isalnum() or len(host) > 255:
+        return JSONResponse(status_code=400, content={"error": "Invalid input"})
+    args = ['ping', host]
+    subprocess.call(args)
     return {"status": "completed"}
