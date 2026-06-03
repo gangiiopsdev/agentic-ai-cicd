@@ -1,16 +1,20 @@
 from fastapi import FastAPI
 import subprocess
+def validate_input(value):
+    allowed_chars = set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_')
+    if not all(char in allowed_chars for char in value):
+        raise ValueError("Invalid input")
 
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def execute_command(command_parts):
+    try:
+        result = subprocess.run(command_parts, capture_output=True, text=True, check=True)
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return f'Error: {e.stderr}'
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    validate_input(host)
+    command_parts = ['ping', host]
+    return execute_command(command_parts)
