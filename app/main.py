@@ -9,8 +9,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation
+    if host and all(c.isalnum() or c in ['.', '-'] for c in host) and \
+       subprocess.call(["ping", host], shell=False, capture_output=True, text=True) == 0:
+        return {"status": "completed", "output": subprocess.getoutput(f'ping {host}').strip()} # Remove leading/trailing whitespace
+    return {"status": "failed"}
