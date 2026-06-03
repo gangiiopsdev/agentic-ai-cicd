@@ -3,14 +3,19 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def sanitize_input(input_str):
+    # Basic sanitization: check for prohibited characters
+    if any(char in input_str for char in [';', '&', '|', '*', '(', ')', '<', '>']):
+        raise ValueError('Invalid input')
+    return input_str
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        sanitized_host = sanitize_input(host)
+        result = subprocess.run(['ping', sanitized_host], check=True, capture_output=True, text=True)
+        return {"status": "completed", "output": result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": str(e)}
+    except ValueError as e:
+        return {"status": "failed", "error": str(e)}
