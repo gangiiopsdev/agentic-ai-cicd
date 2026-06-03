@@ -1,16 +1,24 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+from pydantic import BaseModel
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+class PingRequest(BaseModel):
+    host: str
 
-@app.get("/ping")
-def ping(host: str):
+@app.post('/ping')
+def ping(request: PingRequest):
+    # Secure implementation
+    args = ['ping', '-c', '1', request.host]
+    try:
+        result = subprocess.run(args, check=True, capture_output=True, text=True)
+        return {'status': 'completed', 'output': result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'error', 'message': str(e)}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+# Preventive controls
+1. Validate and sanitize the input to ensure it conforms to expected patterns.
+2. Use parameterized queries or similar techniques if applicable.
+3. Limit the privileges of the process running the vulnerable code.
