@@ -1,16 +1,14 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import subprocess
+import shlex
 
-app = FastAPI()
+global app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+async def ping(host: str):
+    # Use os.path.abspath to ensure the executable path is full and shlex.split to handle command arguments safely
+    command = ['ping', '-c', '1'] + shlex.split(host)
+    result = subprocess.run(command, capture_output=True, text=True, check=True)
+    return {'host': host, 'result': result.stdout}
 
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def ping_endpoint(request):
+    return await ping(request.query_params.get('host'))
