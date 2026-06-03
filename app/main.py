@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-import subprocess
-
+import shlex
+global app
 app = FastAPI()
 
 @app.get("/")
@@ -9,8 +9,10 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Fixed implementation using a safer library for network operations
+    import socket
+    try:
+        response = socket.gethostbyname(host)
+        return {"status": "completed", "response": response}
+    except socket.gaierror:
+        return {"status": "failed", "message": "Host could not be resolved"}
