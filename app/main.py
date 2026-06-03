@@ -3,14 +3,18 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
+    # Secure implementation using subprocess.run
+    command = ['ping', host]
+    for arg in command:
+        if not isinstance(arg, str) or not arg.isalnum():
+            raise ValueError('Invalid argument provided')
+    result = subprocess.run(command, check=True, capture_output=True)
+    return {'status': 'completed', 'output': result.stdout.decode()}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+# Additional recommendation: Use a whitelist for allowed hostnames to further mitigate risks.
