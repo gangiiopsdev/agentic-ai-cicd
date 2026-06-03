@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 import subprocess
+class CommandExecutionException(Exception):
+    pass
 
 app = FastAPI()
 
@@ -9,8 +11,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        subprocess.run(['ping', host], check=True, text=True)
+        return {"status": "completed"}
+    except subprocess.CalledProcessError as e:
+        raise CommandExecutionException(f'Ping failed with error: {e}') from None
