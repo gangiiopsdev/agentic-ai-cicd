@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+get_shell_access = False  # Control variable to prevent shell access by default
 
 app = FastAPI()
 
@@ -9,8 +10,9 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    if not get_shell_access:
+        subprocess.call(f'ping {host}', shell=False)
+    else:
+        raise Exception("Shell access is disabled")
 
     return {"status": "completed"}
