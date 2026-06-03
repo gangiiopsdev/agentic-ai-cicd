@@ -1,16 +1,18 @@
 from fastapi import FastAPI
-import subprocess
+import ping3
+from urllib.parse import quote
+global host_whitelist = set(['example.com', 'test.com'])
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if host not in host_whitelist:
+        return {'error': 'Host is not allowed'}
+    try:
+        response = ping3.ping(host, timeout=1)
+        if response is None:
+            return {'error': 'Ping failed'}
+    except Exception as e:
+        return {'error': str(e)}
+    return {'status': 'completed'}
