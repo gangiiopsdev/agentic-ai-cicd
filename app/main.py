@@ -1,5 +1,12 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+def sanitize_host(host):
+    allowed_hosts = ['example.com', 'test.com']
+    if host in allowed_hosts:
+        return True
+    else:
+        raise ValueError('Host not allowed')
 
 app = FastAPI()
 
@@ -9,8 +16,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if sanitize_host(host):
+        args = ['ping'] + shlex.split(host)
+        subprocess.run(args, check=True)
+        return {"status": "completed"}
