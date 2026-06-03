@@ -1,16 +1,19 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+
+class SafeCommandRunner:
+    def __init__(self):
+        self.safe_commands = ['ping']
+
+    def run(self, command: str, *args, **kwargs):
+        if not any(command.startswith(safe_command) for safe_command in self.safe_commands):
+            raise ValueError('Unsafe command detected')
+        subprocess.run([command] + list(args), check=True, capture_output=True, text=True)
 
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+safe_runner = SafeCommandRunner()
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    return safe_runner.run('ping', host)
