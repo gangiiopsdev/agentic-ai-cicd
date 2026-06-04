@@ -1,16 +1,28 @@
 from fastapi import FastAPI
 import subprocess
+import re
+
+# Define a regex pattern for safe host input
+SAFE_HOST_PATTERN = re.compile(r'^[a-zA-Z0-9.-]+$')
+
+def safe_ping(host):
+    # Validate and sanitize the host input
+    if not isinstance(host, str) or not host.strip() or not SAFE_HOST_PATTERN.match(host):
+        raise ValueError('Invalid host input')
+    args = ['ping', host]
+    result = subprocess.run(args, capture_output=True, text=True)
+    return result.stdout
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        result = safe_ping(host)
+        return {'status': 'completed', 'output': result}
+    except ValueError as e:
+        return {'status': 'error', 'message': str(e)}
