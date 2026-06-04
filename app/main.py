@@ -1,16 +1,13 @@
 from fastapi import FastAPI
 import subprocess
+globally_allowed_ips = {"127.0.0.1", "8.8.8.8"}
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if host in globally_allowed_ips:
+        subprocess.run(["ping", host], check=True)
+    else:
+        raise ValueError("IP not allowed")
     return {"status": "completed"}
