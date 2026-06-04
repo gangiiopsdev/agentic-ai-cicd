@@ -1,16 +1,24 @@
 from fastapi import FastAPI
 import subprocess
+import os
+def sanitize_input(value):
+    if '/' in value or '..' in value or value.startswith('.'):
+        return False
+    return True
+def validate_host(host):
+    try:
+        socket.gethostbyname(host)
+        return True
+    except socket.gaierror:
+        return False
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not host:
+        return {'status': 'error', 'output': 'Host is required'}
+    if not sanitize_input(host) or not validate_host(host):
+        return {'status': 'error', 'output': 'Invalid host'}
+    result = subprocess.run(['ping', os.path.abspath(host)], capture_output=True, text=True)
+    return {'status': 'completed', 'output': result.stdout}
