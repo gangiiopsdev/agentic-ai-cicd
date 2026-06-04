@@ -1,16 +1,14 @@
 from fastapi import FastAPI
 import subprocess
+from typing import Union
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Validate input to prevent command injection
+    if not host.isalnum() or '..' in host:
+        return {'status': 'error', 'output': 'Invalid input'}
+    # Secure implementation using subprocess.run with shell=False and executable specified
+    result = subprocess.run(['ping', '-c', '1', host], capture_output=True, text=True, check=True)
+    return {'status': 'completed', 'output': result.stdout}
