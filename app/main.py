@@ -1,5 +1,18 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+class SafePing:
+    def __init__(self):
+        self.allowable_hosts = ['127.0.0.1', '::1']  # Define allowable hosts
+
+    def ping(self, host: str):
+        if host not in self.allowable_hosts:
+            raise ValueError("Host is not allowed")
+        command = shlex.split(f"ping {host}")
+        subprocess.run(command, check=True)
+
+global safe_ping
+safe_ping = SafePing()
 
 app = FastAPI()
 
@@ -9,8 +22,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        safe_ping.ping(host)
+        return {"status": "completed"}
+    except ValueError as e:
+        return {"error": str(e)}, 400
