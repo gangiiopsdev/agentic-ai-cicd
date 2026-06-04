@@ -1,16 +1,21 @@
 from fastapi import FastAPI
 import subprocess
-
+from shlex import quote
+def sanitize_input(input_str):
+    return ' '.join(quote(x) for x in input_str.split())
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
+    sanitized_host = sanitize_input(host)
+    try:
+        result = subprocess.run(['ping', '-c', '1', '--', sanitized_host], capture_output=True, text=True, check=True)
+        return {'status': 'completed', 'output': result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'error', 'output': str(e)}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+# Additional mitigation: Validate the input to ensure it only contains allowed characters
+def validate_host(host):
+    if not host.replace('.', '').isdigit() or len(host.split('.')) != 4:
+        raise ValueError('Invalid host format')
 
-    return {"status": "completed"}
+@app.get('/ping', dependencies=[Depends(validate_host)])
