@@ -1,16 +1,24 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+import os
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def sanitize_input(host):
+    allowed_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-'
+    return ''.join(char for char in host if char in allowed_chars)
 
 @app.get("/ping")
 def ping(host: str):
+    sanitized_host = sanitize_input(host)
+    args = ['ping', shlex.quote(sanitized_host)]
+    with subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as process:
+        output, error = process.communicate()
+    return {"status": "completed", "output": output.decode(), "error": error.decode() if error else None}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+# Additional security measures
+app.middleware('http')(async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers['Content-Security-Policy'] = "default-src 'self'"  # Example CSP header
+    return response)
