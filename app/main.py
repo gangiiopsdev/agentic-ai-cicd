@@ -1,16 +1,23 @@
 from fastapi import FastAPI
-import subprocess
+import shlex
+from sanic.response import json
 
 app = FastAPI()
 
-@app.get("/")
+async def execute_safe_ping(host: str):
+    if not host.isdigit():
+        return {'status': 'error', 'message': 'Invalid input'}
+    args = ['ping'] + shlex.split(host)
+    result = await asyncio.create_subprocess_exec(*args, capture_output=True, text=True)
+    output = result.stdout
+    if result.stderr:
+        output += '\n' + result.stderr
+    return {'status': 'completed', 'output': output}
+
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    return execute_safe_ping(host)
