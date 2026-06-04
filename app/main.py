@@ -1,16 +1,17 @@
 from fastapi import FastAPI
-import subprocess
+import requests
+from pydantic import BaseModel
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+class PingRequest(BaseModel):
+    host: str
 
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+def ping(request: PingRequest):
+    try:
+        response = requests.get(f'http://{request.host}/ping', timeout=5)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        return {"status": "error", "message": str(e)}
     return {"status": "completed"}
