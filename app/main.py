@@ -1,16 +1,10 @@
 from fastapi import FastAPI
 import subprocess
+def validate_host(host):
+    if not host.isalnum() or len(host) > 100:
+        raise ValueError('Invalid host name')
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
