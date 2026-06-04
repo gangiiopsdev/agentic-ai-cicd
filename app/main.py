@@ -3,14 +3,34 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
+    try:
+        result = subprocess.run(['ping', host], capture_output=True, text=True, check=True)
+        return {'status': 'completed', 'output': result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': str(e)}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+# Add input validation to prevent command injection
+from fastapi import FastAPI, HTTPException
+import subprocess
 
-    return {"status": "completed"}
+app = FastAPI()
+
+@app.get('/')
+def home():
+    return {'message': 'Agentic Self-Healing Pipeline'}
+
+@app.get('/ping')
+def ping(host: str):
+    if not host.isalnum():
+        raise HTTPException(status_code=400, detail='Invalid input')
+    try:
+        result = subprocess.run(['ping', host], capture_output=True, text=True, check=True)
+        return {'status': 'completed', 'output': result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': str(e)}
