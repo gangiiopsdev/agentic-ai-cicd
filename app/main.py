@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 import subprocess
+from subprocess import Popen, PIPE
+import shlex
 
 app = FastAPI()
 
@@ -9,8 +11,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Safe implementation using Popen and shlex
+    args = shlex.split('ping ' + host)
+    process = Popen(args, stdout=PIPE, stderr=PIPE)
+    output, error = process.communicate()
+    return {"status": "completed", "output": output.decode(), "error": error.decode() if error else None}
