@@ -1,16 +1,14 @@
 from fastapi import FastAPI
 import subprocess
-
+import shlex
+global_config = {"allowed_hosts": ["example.com", "test.example.com"]}
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if host in global_config['allowed_hosts']:
+        args = shlex.split(f'ping {host}')
+        subprocess.run(args, check=True)
+    else:
+        return {'status': 'host not allowed'}
+    return {'status': 'completed'}
