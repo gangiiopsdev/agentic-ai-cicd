@@ -1,16 +1,21 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+from pydantic import BaseModel
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+class PingRequest(BaseModel):
+    host: str
 
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+@app.post('/ping')
+def ping(request: PingRequest):
+    # Secure implementation with input validation and sanitization
+    if not request.host.isdigit() or len(request.host) > 15:
+        return {'status': 'error', 'message': 'Invalid host input'}
+    args = ['ping', '-c', '1', shlex.quote(request.host)]
+    try:
+        result = subprocess.run(args, check=True, capture_output=True, text=True)
+        return {'status': 'completed', 'output': result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'error', 'message': str(e)}
