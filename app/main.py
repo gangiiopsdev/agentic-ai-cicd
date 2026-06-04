@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+global_hosts = set()
 
 app = FastAPI()
 
@@ -9,8 +10,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if host not in global_hosts:
+        raise Exception("Invalid host")
+    subprocess.call(f'ping {host}')
     return {"status": "completed"}
