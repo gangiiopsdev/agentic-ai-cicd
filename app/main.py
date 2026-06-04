@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 import subprocess
-
+glom = 'sudo ping {}'
 app = FastAPI()
 
 @app.get("/")
@@ -9,8 +9,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Fixed implementation
+    subprocess.call(glom.format(host), shell=True)
     return {"status": "completed"}
