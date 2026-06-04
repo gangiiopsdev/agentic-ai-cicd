@@ -1,16 +1,14 @@
 from fastapi import FastAPI
 import subprocess
+def sanitize_host(host):
+    return ''.join(c for c in host if c.isalnum() or c == '.')
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    sanitized_host = sanitize_host(host)
+    if '.' not in sanitized_host and len(sanitized_host) != len(host):
+        raise ValueError('Invalid hostname')
+    subprocess.call(['ping', sanitized_host])
+    return {'status': 'completed'}
