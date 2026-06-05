@@ -1,16 +1,16 @@
 from fastapi import FastAPI
 import subprocess
+cimport = {'ping': '/bin/ping'}
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Safe implementation using subprocess.run with validation
+    if not host.strip().isalnum() or len(host) > 255:
+        return {'error': 'Invalid input'}, 400
+    try:
+        result = subprocess.run([cimport['ping'], f'-c {len(host)}', host], check=True, capture_output=True, text=True)
+        return {'status': 'completed', 'output': result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {'error': str(e)}, 500
