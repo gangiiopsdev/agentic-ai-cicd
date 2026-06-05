@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 import subprocess
+global shell_enabled
+shell_enabled = False
 
 app = FastAPI()
 
@@ -9,8 +11,11 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not shell_enabled:
+        try:
+            subprocess.run(['ping', host], check=True)
+            return {"status": "completed"}
+        except subprocess.CalledProcessError as e:
+            return {"status": "failed", "error": str(e)}
+    else:
+        return {"status": "shell disabled for security reasons"}
