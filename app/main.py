@@ -1,16 +1,28 @@
 from fastapi import FastAPI
 import subprocess
 
-app = FastAPI()
+global_params = {
+    'ping': ['-c', '1'],
+}
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def run_command(command):
+    try:
+        result = subprocess.run(command, check=True, text=True)
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return str(e)
 
-@app.get("/ping")
-def ping(host: str):
+class App:
+    def __init__(self):
+        self.app = FastAPI()
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    @app.get("/ping")
+    def ping(self, host: str):
+        # Enhanced validation to prevent command injection
+        if not host.isalnum() or len(host) > 64:
+            return {'status': 'error', 'output': 'Invalid input'}
+        # Use subprocess.run with parameterized arguments to avoid command injection
+        output = run_command(['ping'] + global_params['ping'] + [host])
+        return {'status': 'completed', 'output': output}
 
-    return {"status": "completed"}
+app_instance = App()
