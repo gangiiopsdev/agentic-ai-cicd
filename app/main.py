@@ -1,16 +1,24 @@
 from fastapi import FastAPI
 import subprocess
+import re
+import shlex
+class SafePing:
+    def __init__(self):
+        self.ping_command = ['ping']
 
-app = FastAPI()
+    async def ping(self, host: str):
+        if re.match(r'^[a-zA-Z0-9.-]+$', host):
+            safe_host = shlex.quote(host)
+            full_command = self.ping_command + [safe_host]
+            subprocess.call(full_command, shell=False)
+        else:
+            raise ValueError('Invalid input for host')
+class PingRouter:
+    def __init__(self):
+        self.safe_ping = SafePing()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    @app.get('/ping')
+    async def ping(self, host: str):
+        await self.safe_ping.ping(host)
 
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+router = PingRouter()
