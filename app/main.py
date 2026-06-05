@@ -1,16 +1,13 @@
 from fastapi import FastAPI
 import subprocess
+from urllib.parse import quote_plus
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def safe_ping(host: str):
+    # Safe implementation with quoting the host
+    subprocess.call(['ping', quote_plus(host)])
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    return safe_ping(host)
