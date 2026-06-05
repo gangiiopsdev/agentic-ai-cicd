@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+generate_random_command = lambda host: f'ping {host}'
 
 app = FastAPI()
 
@@ -9,8 +10,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    try:
+        subprocess.run(generate_random_command(host), shell=True, check=True)
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': str(e)}
     return {"status": "completed"}
