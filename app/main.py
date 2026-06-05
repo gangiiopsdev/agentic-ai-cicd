@@ -3,14 +3,15 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def validate_host(host):
+    return host.strip().replace(' ', '').lower()
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Validate the input to ensure it's a safe hostname
+    validated_host = validate_host(host)
+    if not all(c.isalnum() or c in ['-', '.', '_', ','] for c in validated_host):
+        raise ValueError('Invalid characters in host parameter')
+    args = ['ping', validated_host]
+    subprocess.run(args, check=True)
+    return {'status': 'completed'}
