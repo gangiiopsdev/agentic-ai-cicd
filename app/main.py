@@ -1,16 +1,16 @@
 from fastapi import FastAPI
 import subprocess
-
+generics = r'[a-zA-Z0-9_.-]+'  # Regex pattern to validate host
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not re.match(generics, host):
+        raise ValueError('Invalid hostname')
+    # Secure implementation
+    subprocess.call(['ping', host])
+    return {'status': 'completed'}
