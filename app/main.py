@@ -1,16 +1,23 @@
 from fastapi import FastAPI
-import subprocess
+import shlex
+import os
 
 app = FastAPI()
 
-@app.get("/")
+def validate_host(host: str) -> str:
+    if not host.strip():
+        raise Exception('Host parameter is required')
+    if len(host) > 255:
+        raise Exception('Host parameter is too long')
+    return host
+
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    host = validate_host(host)
+    args = shlex.split(f'ping -c 4 {host}')
+    subprocess.run(args, check=True)
+    return {'status': 'completed'}
