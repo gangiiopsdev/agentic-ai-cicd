@@ -1,16 +1,11 @@
 from fastapi import FastAPI
 import subprocess
-
+import shlex
+def escape_input(user_input):
+    return ' '.join(shlex.quote(x) for x in user_input.split())
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    escaped_host = escape_input(host)
+    # Safe implementation
+    subprocess.call(['ping', escaped_host])
