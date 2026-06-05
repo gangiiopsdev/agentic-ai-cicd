@@ -1,16 +1,10 @@
 from fastapi import FastAPI
 import subprocess
-
+def escape_input(user_input):
+    return ' '.join(subprocess.list2cmdline([x]) for x in user_input.split())
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    escaped_host = escape_input(host)
+    # Safe implementation
+    subprocess.call(['ping', '-c 1', escaped_host], shell=False)
