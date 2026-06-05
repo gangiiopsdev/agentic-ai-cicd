@@ -1,16 +1,22 @@
 from fastapi import FastAPI
 import subprocess
+from pydantic import validator
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+class PingRequest:
+    host: str
 
-@app.get("/ping")
-def ping(host: str):
+    @validator('host', pre=True)
+    def validate_host(cls, v):
+        if not v or len(v) > 128:
+            raise ValueError('Invalid hostname')
+        return v
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+@app.get('/ping')
+def ping(ping_request: PingRequest):
+    try:
+        output = subprocess.check_output(['ping', ping_request.host], stderr=subprocess.STDOUT, text=True)
+        return {'status': 'completed', 'output': output}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': str(e.output)}
