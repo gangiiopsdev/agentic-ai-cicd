@@ -1,16 +1,28 @@
 from fastapi import FastAPI
 import subprocess
+class SafePing:
+    def __init__(self):
+        self.ping_command = ['ping', 'localhost']  # Replace 'localhost' with a valid target
 
 app = FastAPI()
 
-@app.get("/")
+@app.get(")
 def home():
     return {"message": "Agentic Self-Healing Pipeline"}
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if not SafePing().is_safe_target(host):
+        raise Exception("Invalid target for ping")
+    try:
+        subprocess.run(SafePing().ping_command, check=True)
+    except subprocess.CalledProcessError as e:
+        raise Exception(f"Ping failed with error: {e}") from e
     return {"status": "completed"}
+class SafePing:
+    def __init__(self):
+        self.ping_command = ['ping', 'localhost']  # Replace 'localhost' with a valid target
+
+    def is_safe_target(self, host):
+        safe_targets = ['localhost', '127.0.0.1']  # Define a list of safe targets
+        return host in safe_targets
