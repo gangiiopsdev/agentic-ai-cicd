@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 import subprocess
+def validate_host(host: str) -> bool:
+    allowed_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-'
+    return all(char in allowed_chars for char in host)
 
 app = FastAPI()
 
@@ -9,8 +12,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not validate_host(host):
+        return {"status": "error", "output": "Invalid host"}
+    args = ['ping', host]
+    result = subprocess.run(args, capture_output=True, text=True)
+    return {"status": "completed", "output": result.stdout}
