@@ -1,5 +1,14 @@
 from fastapi import FastAPI
 import subprocess
+def get_shell_access():
+    return False  # Control function to prevent shell access by default
+
+class SafeSubprocess:
+    @staticmethod
+def ping(host: str):
+        if '-' in host or '/' in host:
+            raise ValueError('Unsafe input detected')
+        subprocess.call(['ping', host])  # Use list to avoid shell injection
 
 app = FastAPI()
 
@@ -9,8 +18,5 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    SafeSubprocess.ping(host)
     return {"status": "completed"}
