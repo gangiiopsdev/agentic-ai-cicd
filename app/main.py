@@ -1,16 +1,24 @@
 from fastapi import FastAPI
 import subprocess
+def run_command(command):
+    if not all(isinstance(arg, str) for arg in command):
+        raise ValueError('All arguments must be strings')
+    try:
+        result = subprocess.run(command, check=True, capture_output=True, text=True)
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return str(e)
 
 app = FastAPI()
 
-@app.get("/")
+@app.get("/home")
 def home():
     return {"message": "Agentic Self-Healing Pipeline"}
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not host.strip():
+        raise ValueError('Host parameter is required')
+    command = ["ping", subprocess.quote(host)]  # Use subprocess.quote to sanitize the input
+    output = run_command(command)
+    return {"status": "completed", "output": output}
