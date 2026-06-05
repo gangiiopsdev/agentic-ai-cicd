@@ -1,16 +1,20 @@
 from fastapi import FastAPI
-import subprocess
+import shlex
+import re
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
 def ping(host: str):
+    # Validate and sanitize the host input
+    if not re.match(r'^[a-zA-Z0-9.-]+$', host):
+        raise ValueError('Invalid host name')
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Use subprocess.run with shell=False and capture_output=True
+    result = subprocess.run(['ping', shlex.quote(host)], capture_output=True, text=True)
+    return {
+        "status": "completed",
+        "response": result.stdout,
+        "stderr": result.stderr,
+        "returncode": result.returncode
+    }
