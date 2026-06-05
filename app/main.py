@@ -1,16 +1,24 @@
 from fastapi import FastAPI
 import subprocess
+class SafePing:
+    ALLOWED_HOSTS = ['example.com', 'test.com']
 
-app = FastAPI()
+    @staticmethod
+def is_valid_host(host: str) -> bool:
+        return any(host.endswith(allowed_host) for allowed_host in SafePing.ALLOWED_HOSTS)
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    @staticmethod
+def safe_ping(host: str):
+        if not SafePing.is_valid_host(host):
+            raise ValueError('Invalid host input')
+        subprocess.run(['ping', '-c 1', host], check=True)
+        return {'status': 'completed'}
 
-@app.get("/ping")
-def ping(host: str):
+global_app = FastAPI()
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+@global_app.get('/ping')
+def ping_endpoint(host: str):
+    try:
+        return SafePing.safe_ping(host)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
