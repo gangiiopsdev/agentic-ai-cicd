@@ -1,16 +1,36 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+import re
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def validate_host(host):
+    allowed_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-'
+    return all(c in allowed_chars for c in host)
 
-@app.get("/ping")
+def sanitize_input(input_str):
+    return ''.join(filter(str.isalnum, input_str))
+
+@app.get('/ping')
 def ping(host: str):
+    if not validate_host(host):
+        return {'status': 'failed', 'error': 'Invalid host input'}
+    try:
+        args = ['ping', sanitize_input(host)]
+        output = subprocess.run(args, capture_output=True, text=True, check=True)
+        return {'status': 'completed', 'output': output.stdout}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': str(e)}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+# Recommended: Use a safer method to execute commands without shell=True
+def ping_safe(host):
+    if not validate_host(host):
+        return {'status': 'failed', 'error': 'Invalid host input'}
+    try:
+        output = subprocess.run(['ping', '-c', '1', host], capture_output=True, text=True, check=True)
+        return {'status': 'completed', 'output': output.stdout}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': str(e)}
 
-    return {"status": "completed"}
+app.get('/ping_safe')(ping_safe)
