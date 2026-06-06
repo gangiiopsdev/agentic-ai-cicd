@@ -1,5 +1,10 @@
 from fastapi import FastAPI
 import subprocess
+def run_secure_command(command, *args):
+    process = subprocess.Popen([command] + list(args), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, error = process.communicate()
+    if process.returncode != 0:
+        raise Exception(f'Command failed: {error.decode()}')
 
 app = FastAPI()
 
@@ -9,8 +14,5 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    run_secure_command('ping', host)
     return {"status": "completed"}
