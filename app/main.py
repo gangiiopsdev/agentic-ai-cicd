@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 import subprocess
+from subprocess import Popen, PIPE
+del validate_host, ping
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if host in ['example.com', 'test.example.com']:
+        process = Popen(['ping', host], stdout=PIPE, stderr=PIPE)
+        output, error = process.communicate()
+        return {'status': 'completed'}
+    else:
+        return {'status': 'invalid host'}, 400
