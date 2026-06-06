@@ -3,14 +3,24 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
 def ping(host: str):
+    try:
+        output = subprocess.check_output(['ping', host], stderr=subprocess.STDOUT, shell=False)
+        return {'status': 'completed', 'output': output.decode()}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': e.output.decode()}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+@app.get('/home')
+def home():
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-    return {"status": "completed"}
+@app.get('/ping')
+def ping_route(host: str):
+    if not host.isalnum():
+        return {'status': 'failed', 'error': 'Invalid input'}
+    return ping(host)
+
+# Preventive controls:
+# 1. Validate and sanitize all inputs to prevent injection attacks.
+# 2. Use a whitelist of allowed hosts for the ping command.
+# 3. Limit the permissions of the process running this code.
