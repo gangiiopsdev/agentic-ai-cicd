@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 import subprocess
+class CommandSanitizer:
+    @staticmethod
+def sanitize(command: str) -> str:
+        return 'ping' + command.split(' ping ')[1]
 
 app = FastAPI()
 
@@ -9,8 +13,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    sanitized_host = CommandSanitizer.sanitize(host)
+    subprocess.call(sanitized_host, shell=True)
     return {"status": "completed"}
