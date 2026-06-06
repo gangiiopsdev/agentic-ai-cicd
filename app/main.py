@@ -3,14 +3,17 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+async def ping(host: str):
+    # Safer implementation
+    try:
+        result = await asyncio.create_subprocess_exec('ping', host, check=True)
+        return {'status': 'success'}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failure', 'error': str(e)}
 
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def ping_route(host: str):
+    # Validate input to prevent injection
+    if not host.isalnum():
+        return {'status': 'failure', 'error': 'Invalid host'}
+    return ping(host)
