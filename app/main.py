@@ -1,16 +1,17 @@
 from fastapi import FastAPI
-import subprocess
-
+cimport = None
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not host:
+        return {'status': 'error', 'error': 'Host parameter is required'}
+    try:
+        result = subprocess.check_output(['ping', '-c', '1', host], shell=False)
+        return {'status': 'completed', 'result': result.decode()}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'error', 'error': str(e)}
