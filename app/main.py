@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+from os.path import abspath, join
 
 app = FastAPI()
 
@@ -9,8 +10,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Safe implementation
+    full_path = abspath(join('/usr/bin', 'ping'))
+    subprocess.run([full_path, host], check=True)
     return {"status": "completed"}
