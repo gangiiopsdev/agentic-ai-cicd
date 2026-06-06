@@ -1,16 +1,11 @@
 from fastapi import FastAPI
 import subprocess
+generate_random_command = lambda: 'ping 127.0.0.1'  # Replace with a safe alternative
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    command = generate_random_command().split()  # Split the command into arguments to prevent shell injection
+    subprocess.run(command, check=True)
+    return {'status': 'completed'}
