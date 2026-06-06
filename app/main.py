@@ -1,16 +1,19 @@
 from fastapi import FastAPI
-import subprocess
+import socketio
 
-app = FastAPI()
+sio = socketio.AsyncServer()
+app = socketio.ASGIApp(sio)
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+ALLOWED_HOSTS = ['127.0.0.1', '::1']
 
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+@sio.on('ping')
+def ping(sid, host: str):
+    if host in ALLOWED_HOSTS:
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            result = sock.connect_ex((host, 80))
+            return {'status': 'completed', 'result': result}
+        except Exception as e:
+            return {'status': 'failed', 'error': str(e)}
+    else:
+        raise ValueError('Host not allowed')
