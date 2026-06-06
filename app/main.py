@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 import subprocess
+import re
+
+def validate_ip(ip):
+    return ip.replace('.', '').isnumeric() and len(ip.split('.')) == 4
 
 app = FastAPI()
 
@@ -9,8 +13,12 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not validate_ip(host):
+        return {"status": "failed", "error": "Invalid IP address"}
+    try:
+        output = subprocess.check_output(['ping', re.escape(host)], stderr=subprocess.STDOUT, timeout=5)
+        return {"status": "completed", "output": output.decode()}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": str(e)}
+    except subprocess.TimeoutExpired:
+        return {"status": "timeout", "message": "Request timed out"}
