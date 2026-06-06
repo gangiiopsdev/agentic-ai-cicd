@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+globally_banned_hosts = ['127.0.0.1', '::1']
 
 app = FastAPI()
 
@@ -9,8 +10,10 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    if host in globally_banned_hosts:
+        return {"error": "Invalid host"}, 403
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    # Secure implementation
+    subprocess.call(f'ping {host}', shell=False)
 
     return {"status": "completed"}
