@@ -1,16 +1,17 @@
 from fastapi import FastAPI
 import subprocess
 
+def escape_command(command):
+    return [arg.strip() for arg in command.split()]  # Use a list of arguments instead of a single string
+
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    command = ['ping', host]
+    subprocess.run(command, check=True)  # Use subprocess.run for better error handling and security
+    return {'status': 'completed'}
