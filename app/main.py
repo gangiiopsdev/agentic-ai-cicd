@@ -1,16 +1,17 @@
 from fastapi import FastAPI
 import subprocess
+from pydantic import BaseModel
+def sanitize_input(input_string):
+    return ''.join(e for e in input_string if e.isalnum() and e.isprintable())
 
 app = FastAPI()
+class PingRequest(BaseModel):
+    host: str
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+@app.post('/ping')
+def ping(request: PingRequest):
+    sanitized_host = sanitize_input(request.host)
+    if not sanitized_host:
+        return {'status': 'error', 'message': 'Invalid host'}
+    subprocess.call(['ping', sanitized_host], shell=False)
+    return {'status': 'completed'}
