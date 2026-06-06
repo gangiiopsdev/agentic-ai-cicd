@@ -3,14 +3,16 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
 def ping(host: str):
+    # Validate the host to prevent command injection
+    if not host.isalnum():
+        raise ValueError('Invalid host name')
+    subprocess.run(['ping', host], check=True)
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+@app.get('/ping')
+def ping_route(host: str):  # Renamed function to avoid naming conflict with the ping function
+    return ping(host)
 
-    return {"status": "completed"}
+@app.get('/')
+def home():
+    return {'message': 'Agentic Self-Healing Pipeline'}
