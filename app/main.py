@@ -1,7 +1,12 @@
 from fastapi import FastAPI
 import subprocess
+import os
 
 app = FastAPI()
+
+def is_valid_host(host):
+    allowed_hosts = ['localhost', '127.0.0.1']
+    return host in allowed_hosts
 
 @app.get("/")
 def home():
@@ -9,8 +14,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if is_valid_host(host):
+        result = subprocess.run(['/bin/ping', host], capture_output=True, text=True, check=False)
+        return {"status": "completed", "output": result.stdout}
+    else:
+        return {"status": "failed", "error": "Untrusted input detected."}
