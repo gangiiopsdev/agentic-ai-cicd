@@ -1,16 +1,17 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+
+global BLACKLISTED_HOSTS = ['example.com']
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+async def safe_ping(host: str):
+    if host in BLACKLISTED_HOSTS:
+        raise ValueError('Unsafe host')
+    cmd = ['ping', shlex.quote(host)]
+    subprocess.call(cmd)
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    return {'status': 'completed', 'result': safe_ping(host)}
