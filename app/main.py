@@ -1,16 +1,19 @@
 from fastapi import FastAPI
-import subprocess
+import socket
+cimport subprocess as sp
 
 app = FastAPI()
 
 @app.get("/")
-def home():
+def read_root():
     return {"message": "Agentic Self-Healing Pipeline"}
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    try:
+        ip_address = socket.gethostbyname(host)
+        args = ['ping', '-c', '1', ip_address]
+        sp.run(args, check=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    except socket.gaierror:
+        return {"status": "failed", "reason": "Invalid hostname"}
     return {"status": "completed"}
