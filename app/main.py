@@ -1,16 +1,16 @@
 from fastapi import FastAPI
 import subprocess
+global allowed_hosts = ['google.com', 'example.com']
 
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def is_safe_host(host):
+    return host in allowed_hosts
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    if is_safe_host(host):
+        subprocess.call(['ping', f'/{host}'])  # Use full path for the command
+    else:
+        raise ValueError("Unsafe host")
 
     return {"status": "completed"}
