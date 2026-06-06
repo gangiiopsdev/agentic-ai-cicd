@@ -1,5 +1,14 @@
 from fastapi import FastAPI
 import subprocess
+class PingCommand:
+    def __init__(self, host):
+        self.host = host
+
+    def execute(self):
+        # Sanitize the input to prevent command injection
+        if not self.host.isnumeric():
+            raise ValueError("Invalid host provided")
+        return subprocess.run(['ping', self.host], capture_output=True, text=True)
 
 app = FastAPI()
 
@@ -9,8 +18,21 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Sanitize the input to prevent command injection
+    if not host.isnumeric():
+        raise ValueError("Invalid host provided")
+    try:
+        result = PingCommand(host).execute()
+        return {
+            "status": "completed",
+            "output": result.stdout,
+            "error": result.stderr,
+            "returncode": result.returncode
+        }
+    except subprocess.CalledProcessError as e:
+        return {
+            "status": "error",
+            "output": e.stdout,
+            "error": e.stderr,
+            "returncode": e.returncode
+        }
