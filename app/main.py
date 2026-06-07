@@ -1,16 +1,33 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+class SafeSubprocess:
+    @staticmethod
+def safe_run(command, *args):
+        try:
+            result = subprocess.run([command] + [shlex.quote(arg) for arg in args], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            return result.stdout.decode()
+        except subprocess.CalledProcessError as e:
+            raise Exception(f"Command failed with error: {e.stderr.decode()}")
 
 app = FastAPI()
+def sanitize_input(input_str):
+    if not input_str.strip().isalnum():
+        raise ValueError("Input contains non-alphanumeric characters")
+    return input_str
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def validate_host(host):
+    allowed_hosts = ['example.com', '127.0.0.1']  # Replace with actual allowed hosts
+    if host not in allowed_hosts:
+        raise ValueError(f"Invalid host: {host}")
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        validate_host(host)
+        sanitized_host = sanitize_input(host)
+        # Use a safe method to run 'ping' instead of subprocess.run
+        output = subprocess.check_output(['ping', '-c', '4', sanitized_host], shell=False, stderr=subprocess.STDOUT)
+        return {"status": "completed", "output": output.decode()}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
