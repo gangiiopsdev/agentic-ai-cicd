@@ -1,16 +1,24 @@
 from fastapi import FastAPI
 import subprocess
+class PingCommand:
+    def __init__(self, host):
+        self.host = host
+
+    def execute(self):
+        if self.host.isnumeric() and len(self.host) <= 4:  # Simple numeric validation for IPv4 addresses
+            args = ['ping', self.host]
+            result = subprocess.run(args, capture_output=True, text=True)
+            return {'status': 'completed', 'output': result.stdout}
+        else:
+            return {'status': 'error', 'message': 'Invalid host'}
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    command = PingCommand(host)
+    return command.execute()
