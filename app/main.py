@@ -1,16 +1,21 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import subprocess
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
 def ping(host: str):
+    if not valid_host(host):
+        raise HTTPException(status_code=400, detail="Invalid host")
+    try:
+        output = subprocess.check_output(["ping", "/sbin/ping", host], stderr=subprocess.STDOUT, text=True)
+        return {"status": "completed", "output": output}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": str(e.output)}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+# Helper function to validate host
+import re
 
-    return {"status": "completed"}
+def valid_host(host: str) -> bool:
+    pattern = re.compile(r'^[a-zA-Z0-9.-]+$')
+    return bool(pattern.match(host))
