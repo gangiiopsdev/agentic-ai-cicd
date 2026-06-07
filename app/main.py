@@ -1,16 +1,10 @@
 from fastapi import FastAPI
-import subprocess
-
+def get_ipython():
+    return None
+def run_html_magic(cell_magic_name, cell):
+    return "<div style='text-align:center;'>This code cannot be executed in this environment.</div>"
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+# Example endpoint to demonstrate usage
+@app.get('/')
+def read_root():
+    return {'message': 'Hello World'}
