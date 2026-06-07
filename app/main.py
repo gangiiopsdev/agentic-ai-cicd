@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 import subprocess
+def ping(host: str):
+    gateway = subprocess.run(['ping', host], capture_output=True, text=True)
+    return {'status': gateway.stdout if gateway.returncode == 0 else gateway.stderr}
 
 app = FastAPI()
 
@@ -9,8 +12,5 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    result = subprocess.run(['ping', host], capture_output=True, text=True)
+    return {'status': result.stdout if result.returncode == 0 else result.stderr}
