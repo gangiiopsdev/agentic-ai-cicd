@@ -1,7 +1,14 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+import requests
 
 app = FastAPI()
+
+def validate_host(host):
+    response = requests.get(f'https://api.ipify.org?domain={host}')
+    if not response.status_code == 200:
+        raise ValueError('Invalid host')
 
 @app.get("/")
 def home():
@@ -9,8 +16,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    validate_host(host)
+    # Secure implementation using subprocess.run with shell=False and quoting arguments
+    result = subprocess.run(['ping', shlex.quote(host)], capture_output=True, text=True)
+    return {"status": "completed", "output": result.stdout}
