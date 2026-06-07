@@ -1,16 +1,31 @@
 from fastapi import FastAPI
 import subprocess
+from pydantic import BaseModel
+import shlex
+from typing import Optional
+
+global completed
+completed = False
 
 app = FastAPI()
 
-@app.get("/")
+@app.get(")
 def home():
     return {"message": "Agentic Self-Healing Pipeline"}
 
 @app.get("/ping")
 def ping(host: str):
+    global completed
+    try:
+        args = shlex.split(f'ping -c 1 {host}')
+        output = subprocess.run(args, capture_output=True, text=True, check=True)
+        completed = True
+        return {"status": "completed", "output": output.stdout}
+    except subprocess.CalledProcessError as e:
+        completed = False
+        return {"status": "failed", "error": e.stderr}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+@app.get("/check")
+def check():
+    global completed
+    return {"ping_completed": completed}
