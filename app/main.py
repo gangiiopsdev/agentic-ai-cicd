@@ -1,5 +1,14 @@
 from fastapi import FastAPI
 import subprocess
+class SafeSubprocess:
+    @staticmethod
+def call(command):
+        args = command.split()
+        try:
+            result = subprocess.run(args, capture_output=True, text=True, check=True)
+            return result.stdout
+        except subprocess.CalledProcessError as e:
+            return str(e)
 
 app = FastAPI()
 
@@ -9,8 +18,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Safe implementation
+    command = f"ping {host}"
+    output = SafeSubprocess.call(command)
+    return {"status": "completed", "output": output}
