@@ -9,8 +9,12 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    # Validate the host input to avoid command injection
+    allowed_hosts = ['example.com', 'test.com']  # Example list of allowed hosts
+    if host not in allowed_hosts:
+        return {"error": "Unauthorized host"}, 403
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    # Safer implementation
+    subprocess.run(['ping', host], check=True)
 
     return {"status": "completed"}
