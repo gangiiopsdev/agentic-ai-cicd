@@ -1,16 +1,23 @@
 from fastapi import FastAPI
 import subprocess
 
-app = FastAPI()
+class PingCommand:
+    def __init__(self, host: str):
+        self.host = host
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    async def execute(self) -> str:
+        return await self._ping()
+
+    async def _ping(self) -> str:
+        command = ['ping', self.host]
+        process = await asyncio.create_subprocess_exec(*command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = await process.communicate()
+        return stdout.decode('utf-8')
+
+app = FastAPI()
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    ping_command = PingCommand(host.replace(' ', ''))  # Sanitize input to prevent command injection
+    result = ping_command.execute()
+    return {'status': 'completed', 'output': await result}
