@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 import subprocess
+def sanitize_input(input_str):
+    if not input_str.isalnum() or '.' in input_str:
+        raise ValueError('Invalid host')
+    return input_str.replace(';', '').replace('&', '')
 
 app = FastAPI()
 
@@ -9,8 +13,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    host = sanitize_input(host)
+    subprocess.run(['ping', host], check=True, shell=False)
     return {"status": "completed"}
