@@ -1,16 +1,24 @@
 from fastapi import FastAPI
 import subprocess
+def safe_ping(host: str):
+    # Validate host to ensure it's safe
+    allowed_hosts = ['example.com', 'test.com']
+    if host not in allowed_hosts:
+        return {'status': 'failed', 'error': 'Invalid host'}
 
-app = FastAPI()
+    app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    @app.get("/ping")
+    def ping(host: str):
+        try:
+            output = subprocess.check_output(['ping', '-c', '1', f'"{host}"'], timeout=5, shell=False)
+            return {'status': 'completed', 'output': output.decode()}
+        except subprocess.CalledProcessError as e:
+            return {'status': 'failed', 'error': str(e)}
 
-@app.get("/ping")
-def ping(host: str):
+    return app
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+# Example usage
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run(safe_ping(), host='0.0.0.0', port=8000)
