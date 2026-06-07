@@ -1,16 +1,21 @@
 from fastapi import FastAPI
-import subprocess
+import asyncio
+from shlex import quote as cmd_quote
+import os
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+async def ping_host(host):
+    if not validate_host(host):
+        raise ValueError('Invalid host name')
 
-@app.get("/ping")
-def ping(host: str):
+    # Use subprocess.run with shell=False to avoid command injection
+    cmd = ['ping', '-c', '1', host]
+    result = await asyncio.create_subprocess_exec(*cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = await result.communicate()
+    return {'status': 'completed', 'stdout': stdout.decode(), 'stderr': stderr.decode()}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+async def validate_host(host):
+    # Simple validation example: allow only alphanumeric characters and dots
+    import re
+    return bool(re.match(r'^[a-zA-Z0-9.]+$', host))
