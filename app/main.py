@@ -1,16 +1,14 @@
 from fastapi import FastAPI
 import subprocess
+from shlex import quote
 
-app = FastAPI()
+global app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+async def safe_ping(host: str):
+    # Safe implementation using subprocess.run and shell quoting
+    subprocess.run(['ping', quote(host)], check=True)
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    await safe_ping(host)
     return {"status": "completed"}
