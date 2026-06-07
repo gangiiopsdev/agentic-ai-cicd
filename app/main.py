@@ -1,16 +1,17 @@
 from fastapi import FastAPI
 import subprocess
+from typing import Optional
+from pydantic import BaseModel
+import threading
+global ping_lock
+ping_lock = threading.Lock()
 
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+class PingRequest(BaseModel):
+    host: str
 
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def ping(request: PingRequest):
+    with ping_lock:
+        result = subprocess.run(['ping', '-c', '1', request.host], capture_output=True, text=True)
+        return {'result': result.stdout}
