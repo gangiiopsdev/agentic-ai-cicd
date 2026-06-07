@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 app = FastAPI()
+bearer_scheme = HTTPBearer()
 
 @app.get("/")
 def home():
@@ -9,8 +12,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if not host.isalnum() or '&&' in host or ';' in host:
+        raise ValueError("Invalid input for host")
+    command = ["ping", *shlex.split(host)]
+    subprocess.run(command, check=True)
     return {"status": "completed"}
