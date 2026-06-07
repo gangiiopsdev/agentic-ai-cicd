@@ -1,16 +1,24 @@
 from fastapi import FastAPI
-import subprocess
+import os
+import asyncio
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def sanitize_host(host: str) -> str:
+    return ''.join(filter(str.isalnum, host))
 
-@app.get("/ping")
-def ping(host: str):
+async def ping(host: str):
+    try:
+        safe_host = sanitize_host(host)
+        result = await asyncio.create_subprocess_exec('ping', '-c', '1', safe_host, capture_output=True, text=True)
+        output = await result.stdout.read()
+        return {'status': 'completed', 'output': output.decode()}
+    except Exception as e:
+        return {'status': 'failed', 'error': str(e)}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+@app.get('/ping')
+def ping_route(host: str):
+    safe_host = sanitize_host(host)
+    if not all(c.isalnum() or c in ('.', '-', '_') for c in safe_host):
+        return {'status': 'failed', 'error': 'Invalid input'}
+    return ping(safe_host)
