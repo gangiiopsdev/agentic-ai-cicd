@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 import subprocess
+global ping_command
+ping_command = "ping {}" if platform.system().lower() == 'windows' else "ping -c {}"
 
 app = FastAPI()
 
@@ -9,8 +11,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        result = subprocess.call(ping_command.format(host, 1), shell=True)
+        return {"status": "completed", "result": result}
+    except Exception as e:
+        return {"error": str(e)}
