@@ -1,16 +1,21 @@
 from fastapi import FastAPI
 import subprocess
+def safe_ping(host: str):
+    if not host.strip():
+        raise ValueError("Invalid hostname")
+    allowed_hosts = ['google.com', 'example.com']
+    if host in allowed_hosts:
+        subprocess.run(['ping', '--version'], check=True)  # Use subprocess.run for better control and error handling
+        return {'status': 'completed'}
+    else:
+        raise ValueError("Hostname not allowed")
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    return safe_ping(host)
