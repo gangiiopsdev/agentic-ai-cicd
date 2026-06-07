@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 import subprocess
+import re
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def safe_ping(host):
+    if not re.match(r'^[0-9]{1,3}\.[0-9]{1,3}\\\.[0-9]{1,3}\\\.[0-9]{1,3}$', host):
+        raise ValueError('Invalid IP address')
+    subprocess.run(['ping', '-c', '1', host], check=True)
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    safe_ping(host)
+    return {'status': 'completed'}
