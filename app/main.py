@@ -1,16 +1,17 @@
 from fastapi import FastAPI
 import subprocess
+generators = {
+    'ping': lambda host: subprocess.call(['ping', host])
+}
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if host in generators:
+        generators[host](host)
+    return {'status': 'completed'}
