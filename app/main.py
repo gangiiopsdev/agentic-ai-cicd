@@ -9,8 +9,10 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Safer implementation
+    if host in ['localhost', '127.0.0.1']:
+        subprocess.call(['ping', host])
+    else:
+        return {"error": "Access denied for host"}
+    
     return {"status": "completed"}
