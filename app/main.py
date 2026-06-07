@@ -1,6 +1,11 @@
 from fastapi import FastAPI
 import subprocess
-
+global_process = None
+def clean_process():
+    global global_process
+    if global_process and global_process.poll() is None:
+        global_process.terminate()
+        global_process.wait()
 app = FastAPI()
 
 @app.get("/")
@@ -9,8 +14,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    global global_process
+clean_process()
+global_process = subprocess.Popen(['ping', host], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+return {"status": "completed"}
