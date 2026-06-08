@@ -1,5 +1,15 @@
 from fastapi import FastAPI
 import subprocess
+class SafePing:
+    @staticmethod
+def ping(host: str):
+        safe_host = host.replace(';', '').replace('&', '').replace('|', '')
+        safe_host = subprocess.list2cmdline([safe_host])  # Properly escape shell metacharacters
+        try:
+            output = subprocess.run(['ping', safe_host], capture_output=True, text=True, check=True)
+            return output.stdout
+        except subprocess.CalledProcessError as e:
+            return str(e)
 
 app = FastAPI()
 
@@ -8,9 +18,6 @@ def home():
     return {"message": "Agentic Self-Healing Pipeline"}
 
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def ping_endpoint(host: str):
+    result = SafePing.ping(host)
+    return {"status": "completed", "result": result}
