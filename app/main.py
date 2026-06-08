@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 import subprocess
+def safe_ping(host):
+    # Safe implementation using subprocess.run without shell=True
+    subprocess.run(['ping', host], check=True)
 
 app = FastAPI()
 
@@ -9,8 +12,12 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    if validate_host(host):
+        safe_ping(host)
+        return {"status": "completed"}
+    else:
+        raise HTTPException(status_code=400, detail="Invalid host")
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def validate_host(host: str) -> bool:
+    # Add your validation logic here
+    return True
