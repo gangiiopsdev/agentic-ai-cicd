@@ -1,5 +1,10 @@
 from fastapi import FastAPI
 import subprocess
+def ping(host: str):
+    # Validate the input to prevent command injection
+    if not all(c.isalnum() or c in ['.', '-', '_'] for c in host):
+        raise ValueError("Invalid hostname")
+    subprocess.run(['ping', host], check=True, shell=False)
 
 app = FastAPI()
 
@@ -9,8 +14,11 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        # Validate the input to prevent command injection
+        if not all(c.isalnum() or c in ['.', '-', '_'] for c in host):
+            raise ValueError("Invalid hostname")
+        subprocess.run(['ping', host], check=True, shell=False)
+        return {"status": "completed"}
+    except subprocess.CalledProcessError as e:
+        return {"error": str(e)}, 400
