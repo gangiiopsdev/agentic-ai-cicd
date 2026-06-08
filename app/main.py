@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+
+global host_list
+host_list = ['127.0.0.1', '8.8.8.8'] # Replace with actual list of hosts to ping
 
 app = FastAPI()
 
@@ -9,8 +13,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if host in host_list:
+        subprocess.call(shlex.split(f'ping {host}'))
+    else:
+        return {"error": "Host not allowed"}
     return {"status": "completed"}
