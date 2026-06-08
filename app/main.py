@@ -1,16 +1,23 @@
 from fastapi import FastAPI
 import subprocess
+class CommandSanitizer:
+    @staticmethod
+def sanitize(command: str) -> str:
+        # Add proper validation and sanitization logic here
+        if 'ping' in command:
+            return command.replace('ping', 'ping')
+        else:
+            raise ValueError("Invalid command")
 
 app = FastAPI()
 
-@app.get("/")
+@app.get(")
 def home():
     return {"message": "Agentic Self-Healing Pipeline"}
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    sanitized_host = CommandSanitizer.sanitize(host)
+    # Use subprocess.run instead of subprocess.call and avoid shell=True
+    result = subprocess.run(sanitized_host, capture_output=True, text=True, check=False)
+    return {"status": "completed", "output": result.stdout}
