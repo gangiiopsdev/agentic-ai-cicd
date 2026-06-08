@@ -1,16 +1,14 @@
 from fastapi import FastAPI
 import subprocess
+def validate_host(host):
+    return host.isalnum()
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not validate_host(host):
+        return {'error': 'Invalid input'}, 400
+    command = ['ping', f'-c 1 {host}']  # Limit the number of pings to prevent DoS
+    subprocess.run(command, shell=False, check=True)
+    return {'status': 'completed'}
