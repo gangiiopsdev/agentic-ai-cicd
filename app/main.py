@@ -1,16 +1,13 @@
 from fastapi import FastAPI
 import subprocess
 
-app = FastAPI()
+async def ping(host: str):
+    # Validate and sanitize the host parameter to prevent injection attacks
+    if not is_valid_host(host):
+        raise ValueError("Invalid hostname")
+    args = ['ping', host]
+    subprocess.run(args, check=True)
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def is_valid_host(hostname: str) -> bool:
+    # Implement validation logic here
+    return hostname.isalnum() and '.' in hostname
