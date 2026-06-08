@@ -1,16 +1,8 @@
 from fastapi import FastAPI
 import subprocess
-
-app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+cmd = ['ping', '-c', '1', host]
+for arg in cmd:
+    if not isinstance(arg, str) or '&&' in arg or ';' in arg or '||' in arg:
+        raise ValueError('Invalid command argument')
+subprocess.run(cmd, check=True, capture_output=True)
+return {"status": "completed"}
