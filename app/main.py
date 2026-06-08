@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 import subprocess
+class PingCommand(subprocess.Popen):
+    def __init__(self, host: str):
+        super().__init__(args=['ping', subprocess.list2cmdline([host])], shell=False)
 
 app = FastAPI()
 
@@ -9,8 +12,11 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        process = PingCommand(host)
+        process.wait(timeout=5)  # Adjust timeout as needed
+        return {"status": "completed"}
+    except subprocess.TimeoutExpired:
+        return {"error": "Command timed out"}
+    except Exception as e:
+        return {"error": str(e)}
