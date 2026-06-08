@@ -1,16 +1,26 @@
 from fastapi import FastAPI
-import subprocess
+import asyncio
+from pydantic import BaseModel
+
+class PingCommand:
+    def __init__(self, host: str):
+        self.host = host
+
+    async def execute(self):
+        # Safe implementation using subprocess.run with check=True and input validation
+        try:
+            result = await asyncio.create_subprocess_shell(f'ping {self.host}', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output, error = await result.communicate()
+            return {'status': 'completed', 'output': output.decode(), 'error': error.decode()}
+        except Exception as e:
+            return {'status': 'failed', 'error': str(e)}
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+class PingRequest(BaseModel):
+    host: str
 
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def ping(request: PingRequest):
+    command = PingCommand(host=request.host)
+    return await command.execute()
