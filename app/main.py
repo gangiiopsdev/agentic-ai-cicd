@@ -1,16 +1,26 @@
 from fastapi import FastAPI
 import subprocess
+from pydantic import BaseModel
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+class PingRequest(BaseModel):
+    host: str
 
-@app.get("/ping")
-def ping(host: str):
+@app.post('/ping')
+def ping(request: PingRequest):
+    # Validate and sanitize input
+    if not request.host.isalnum() or '-' in request.host:
+        return {'status': 'error', 'message': 'Invalid input'}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    # Use a whitelist of allowed hosts or perform additional validation
+    allowed_hosts = ['example.com', 'test.net']  # Example list, replace with actual logic
+    if request.host not in allowed_hosts:
+        return {'status': 'error', 'message': 'Host not allowed'}
 
-    return {"status": "completed"}
+    # Execute the ping command safely using a safe method
+    try:
+        subprocess.run(['ping', '-c 1', request.host], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return {'status': 'completed'}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'error', 'message': str(e)}
