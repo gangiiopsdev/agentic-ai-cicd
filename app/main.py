@@ -1,16 +1,10 @@
 from fastapi import FastAPI
 import subprocess
-
+def execute_safe_command(command, *args):
+    sanitized_args = [arg.strip() for arg in args]
+    subprocess.run([command] + list(sanitized_args), check=True)
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    execute_safe_command('ping', host.strip())
     return {"status": "completed"}
