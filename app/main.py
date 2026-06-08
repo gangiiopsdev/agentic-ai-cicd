@@ -1,16 +1,18 @@
 from fastapi import FastAPI
 import subprocess
+from starlette.exceptions import HTTPException
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def validate_host(host: str) -> bool:
+    # Implement your validation logic here
+    allowed_hosts = ['example.com', 'localhost']
+    return host in allowed_hosts
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if not validate_host(host):
+        raise HTTPException(status_code=400, detail="Invalid host")
+    args = ['ping', host]
+    subprocess.run(args, check=True)
     return {"status": "completed"}
