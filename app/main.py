@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+global process
 
 app = FastAPI()
 
@@ -9,8 +10,21 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    global process
+    if process:
+        process.terminate()
+    # Validate the host input to ensure it does not contain harmful characters or patterns
+    allowed_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-'
+    if any(char not in allowed_chars for char in host):
+        return {"status": "error", "message": "Invalid host parameter"}
+    # Escape the host input to prevent command injection
+    escaped_host = subprocess.list2cmdline([host])
+    process = subprocess.Popen(['ping', escaped_host], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    return {"status": "completed", "output": process.communicate()}
 
-    return {"status": "completed"}
+@app.on_event("shutdown")
+def stop_ping():
+    global process
+    if process:
+        process.terminate()
