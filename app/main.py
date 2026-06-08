@@ -1,5 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import subprocess
+
+global host_pattern
+host_pattern = re.compile(r'^[a-zA-Z0-9.-]+$')
 
 app = FastAPI()
 
@@ -9,8 +12,10 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not host_pattern.match(host):
+        raise HTTPException(status_code=400, detail="Invalid host parameter")
+    try:
+        output = subprocess.run(['ping', host], check=True, capture_output=True, text=True)
+        return {"status": "completed", "output": output.stdout}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": str(e)}
