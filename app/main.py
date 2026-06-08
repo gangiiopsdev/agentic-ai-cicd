@@ -1,16 +1,17 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+globally_whitelisted_hosts = {'example.com', 'another-example.com'}
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if host in globally_whitelisted_hosts:
+        try:
+            result = subprocess.run(['ping', shlex.quote(host)], capture_output=True, text=True, check=True)
+            return {'status': 'completed', 'output': result.stdout}
+        except subprocess.CalledProcessError as e:
+            return {'error': f'Ping failed: {e.stderr}'}, 500
+    else:
+        return {'error': 'Host not allowed'}, 403
