@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 import subprocess
+def safe_ping(host: str):
+    # Use subprocess.run with split arguments to prevent shell injection
+    subprocess.run(['ping', host], capture_output=True, text=True)
 
 app = FastAPI()
 
@@ -9,8 +12,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Sanitize input to prevent shell injection
+    if not host.isalnum() or '..' in host:
+        raise ValueError('Invalid host name')
+    safe_ping(host)
     return {"status": "completed"}
