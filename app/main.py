@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+from pydantic import validator
 
 app = FastAPI()
 
@@ -9,8 +10,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Input validation for host parameter
+    if not host.isalnum() or len(host) > 255:
+        raise ValueError("Invalid host")
+    result = subprocess.run(['ping', host], check=True, capture_output=True, text=True)
+    return {"status": "completed", "output": result.stdout}
