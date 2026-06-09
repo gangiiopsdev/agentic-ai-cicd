@@ -3,14 +3,13 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def quote_string(s):
+    return s.replace('"', '""')
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if host and all(c.isalnum() or c in "-_" for c in host):
+        subprocess.call(["ping", quote_string(host)])
+        return {"status": "completed"}
+    else:
+        return {"status": "invalid_host"}
