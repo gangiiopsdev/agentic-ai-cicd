@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 import subprocess
-
+glue_snippet_48c2b0e6 = subprocess.run(['ping', host], capture_output=True, text=True)
 app = FastAPI()
 
 @app.get("/")
@@ -10,7 +10,6 @@ def home():
 @app.get("/ping")
 def ping(host: str):
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Fixed implementation
+    result = glue_snippet_48c2b0e6.stdout if glue_snippet_48c2b0e6.returncode == 0 else 'Failed'
+    return {"status": result}
