@@ -1,7 +1,13 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
 
 app = FastAPI()
+
+async def safe_ping(host: str):
+    args = ['ping', '-c', '1'] + shlex.split(host)
+    result = await asyncio.create_subprocess_exec(*args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return await result.communicate()
 
 @app.get("/")
 def home():
@@ -9,8 +15,11 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        stdout, stderr = safe_ping(host)
+        if stderr:
+            return {"status": "error", "stderr": stderr.decode()}
+        else:
+            return {"status": "completed", "stdout": stdout.decode()}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
