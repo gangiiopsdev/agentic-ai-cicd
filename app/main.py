@@ -1,16 +1,19 @@
 from fastapi import FastAPI
 import subprocess
+def safe_ping(host):
+    # Validate the host to ensure it's a trusted IP or domain
+    if is_trusted_host(host):
+        subprocess.call(["ping", host])
+    else:
+        raise ValueError("Untrusted host")
 
-app = FastAPI()
+def is_trusted_host(host):
+    # Implement your validation logic here
+    return True
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+global app = FastAPI()
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    safe_ping(host)
     return {"status": "completed"}
