@@ -1,16 +1,13 @@
 from fastapi import FastAPI
 import subprocess
+def ping_host(host):
+    if not isinstance(host, str) or '&&' in host or ';' in host or '||' in host:
+        raise ValueError('Invalid command argument')
+    cmd = ['ping', '-c', '1', host]
+    result = subprocess.run(cmd, check=True, capture_output=True)
+    return {'status': 'completed', 'output': result.stdout.decode()}
 
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+@app.post('/ping/')
+def ping(request: dict):
+    return ping_host(request['host'])
