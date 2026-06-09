@@ -1,16 +1,19 @@
 from fastapi import FastAPI
-import subprocess
+import re
+class SafePing:
+    def __init__(self):
+        self.safe_hosts = {'safehost1', 'safehost2'}
+
+    def is_safe_host(self, host):
+        return host in self.safe_hosts
 
 app = FastAPI()
+ping_service = SafePing()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if ping_service.is_safe_host(host):
+        subprocess.call(['ping', host])
+        return {'status': 'completed'}
+    else:
+        return {'error': 'Invalid host'}, 403
