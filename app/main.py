@@ -9,8 +9,14 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    # Secure implementation
+    if validate_host(host):
+        subprocess.call(['ping', host], shell=False)
+        return {"status": "completed"}
+    else:
+        return {"error": "Invalid host"}, 400
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def validate_host(host: str) -> bool:
+    # Implement validation logic here
+    allowed_hosts = ['example.com', 'localhost']
+    return host in allowed_hosts
