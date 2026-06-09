@@ -9,8 +9,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Fixed implementation using subprocess.run with shell=False and check=True
+    result = subprocess.run(['ping', host], capture_output=True, text=True)
+    if result.returncode != 0:
+        return {"status": "failed", "error": result.stderr}
+    return {"status": "completed", "stdout": result.stdout}
