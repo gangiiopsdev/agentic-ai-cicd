@@ -1,16 +1,19 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+
+class Sanitizer:
+    def __init__(self):
+        self.allowed_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-'
+
+    def sanitize(self, input_str):
+        return ''.join(filter(lambda x: x in self.allowed_chars, input_str))
 
 app = FastAPI()
+sanitizer = Sanitizer()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    sanitized_host = shlex.quote(sanitizer.sanitize(host))
+    command = ['ping', '-c', '1', sanitized_host]
+    result = subprocess.run(command, capture_output=True, text=True)
+    return {'status': 'completed', 'output': result.stdout}
