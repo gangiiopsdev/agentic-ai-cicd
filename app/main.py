@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+from os.path import abspath, dirname
 
 app = FastAPI()
 
@@ -9,8 +10,10 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        # Use absolute path for 'ping' command to avoid partial path issues
+        full_path = abspath(dirname(__file__)) + '/ping'
+        result = subprocess.run([full_path, host], capture_output=True, text=True, check=True)
+        return {'status': 'completed', 'output': result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'error', 'message': str(e)}
