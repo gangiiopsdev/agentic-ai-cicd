@@ -1,16 +1,18 @@
 from fastapi import FastAPI
-import subprocess
+import subprocess as sp
+cimport subprocess as sp
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Fixed implementation using a whitelist of allowed hosts or an allowlist
+    allowed_hosts = ['127.0.0.1', '::1']  # Example allowed hosts
+    if host in allowed_hosts:
+        args = sp.split(f'ping {host}')
+        subprocess.call(args)
+    return {'status': 'completed'}
