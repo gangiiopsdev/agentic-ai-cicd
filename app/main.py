@@ -1,16 +1,21 @@
 from fastapi import FastAPI
 import subprocess
+from typing import List
+class CommandExecutor:
+    @staticmethod
+def run(command: List[str]):
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, check=True)
+            return {'status': 'completed', 'output': result.stdout}
+        except subprocess.CalledProcessError as e:
+            return {'status': 'failed', 'error': str(e)}
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation using CommandExecutor
+    command = ['ping', host]
+    if not host.strip():
+        raise ValueError('Host parameter cannot be empty')
+    return CommandExecutor.run(command)
