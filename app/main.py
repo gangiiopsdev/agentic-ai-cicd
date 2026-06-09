@@ -9,8 +9,10 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    # Secure implementation with input validation and full executable path
+    if host.strip().isalnum() and len(host) < 256:
+        subprocess.call(["ping", host])
+    else:
+        return {"error": "Invalid or too long host name"}
 
     return {"status": "completed"}
