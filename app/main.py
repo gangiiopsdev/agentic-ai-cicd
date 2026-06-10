@@ -1,16 +1,16 @@
 from fastapi import FastAPI
 import subprocess
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+http_basic = HTTPBasic()
 
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+def ping(credentials: HTTPBasicCredentials = Depends(http_basic)):
+    username = credentials.username
+    password = credentials.password
+    # Sanitize the input to prevent injection attacks
+    sanitized_host = subprocess.list2cmdline([host])
+    subprocess.run(['ping', sanitized_host], check=True)
     return {"status": "completed"}
