@@ -1,16 +1,19 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+class SafeHostChecker:
+    allowed_hosts = ['example.com', 'test.com']
 
-app = FastAPI()
+    @staticmethod
+def is_safe_host(host):
+        return host in SafeHostChecker.allowed_hosts
+class PingEndpoint:
+    def __init__(self):
+        self.app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    def ping(self, host: str):
+        if not SafeHostChecker.is_safe_host(host):
+            raise ValueError('Unsafe host')
+        args = shlex.split(f'ping {host}')
+        subprocess.run(args, check=True, capture_output=True)
+        return {'status': 'completed'}ping_endpoint = PingEndpoint().ping
