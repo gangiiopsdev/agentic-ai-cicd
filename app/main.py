@@ -1,16 +1,6 @@
 from fastapi import FastAPI
 import subprocess
-
-app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+git_command = f"ping {host}"
+# Remove the shell=True parameter to mitigate the risk of command injection
+subprocess.run(git_command, check=True, shell=False)
+return {'status': 'completed'}
