@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 import subprocess
+def escape_shell_arg(arg):
+    return ' '.join(subprocess.list2cmdline([arg]).split())
 
 app = FastAPI()
 
@@ -9,8 +11,10 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        output = subprocess.check_output([escape_shell_arg("ping"), escape_shell_arg(host)], stderr=subprocess.STDOUT, timeout=5)
+        return {"status": "completed", "output": output.decode()}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": e.output.decode()}
+    except Exception as e:
+        return {"status": "failed", "error": str(e)}
