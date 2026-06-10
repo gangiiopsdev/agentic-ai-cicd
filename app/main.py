@@ -1,5 +1,11 @@
 from fastapi import FastAPI
 import subprocess
+def execute_command(command):
+    try:
+        result = subprocess.run(command, check=True, capture_output=True, text=True)
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return f'Error: {e.stderr}'
 
 app = FastAPI()
 
@@ -9,8 +15,10 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    # Secure implementation
+    command = ['ping', host]
+    return {'output': execute_command(command)}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+# Preventive controls
+1. Use `subprocess.run` with `shell=False` to avoid shell injection.
+2. Validate and sanitize all inputs before using them in subprocess calls.
