@@ -1,7 +1,17 @@
 from fastapi import FastAPI
 import subprocess
+class SafePinger:
+    def __init__(self):
+        self.allowed_hosts = ['example.com']
+
+    def ping(self, host: str):
+        if host in self.allowed_hosts:
+            subprocess.call(['ping', host])
+        else:
+            raise ValueError('Host not allowed')
 
 app = FastAPI()
+pinger = SafePinger()
 
 @app.get("/")
 def home():
@@ -9,8 +19,5 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    pinger.ping(host)
     return {"status": "completed"}
