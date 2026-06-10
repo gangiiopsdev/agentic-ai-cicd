@@ -1,16 +1,24 @@
 from fastapi import FastAPI
-import subprocess
+import asyncio
+from pydantic import BaseModel
+from shlex import quote
 
-app = FastAPI()
+class PingCommand:
+    def __init__(self, host):
+        self.host = host
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    async def execute(self):
+        args = ['ping', '-c', '1', quote(self.host)]  # Limiting the number of pings to 1 for security
+        process = await asyncio.create_subprocess_exec(*args, capture_output=True, text=True)
+        return process.stdout
+
+gapp = FastAPI()
+
+class PingRequest(BaseModel):
+    host: str
 
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def ping(request: PingRequest):
+    ping_command = PingCommand(request.host)
+    result = await ping_command.execute()
+    return {"status": "completed", "result": result}
