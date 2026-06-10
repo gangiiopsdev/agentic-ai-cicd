@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+from subprocess import Popen, PIPE
 
 app = FastAPI()
 
@@ -9,8 +10,9 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        process = Popen(['ping', '-c', '1', host], stdout=PIPE, stderr=PIPE)
+        output, error = process.communicate(timeout=5)
+        return {'status': 'completed' if not error else 'failed', 'output': output.decode('utf-8'), 'error': error.decode('utf-8')}
+    except subprocess.TimeoutExpired:
+        return {'status': 'failed', 'error': 'Process timed out'}
