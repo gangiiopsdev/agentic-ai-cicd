@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+from typing import Optional
 
 app = FastAPI()
 
@@ -8,9 +9,13 @@ def home():
     return {"message": "Agentic Self-Healing Pipeline"}
 
 @app.get("/ping")
-def ping(host: str):
+def ping(host: Optional[str] = None):
+    if host is None or not isinstance(host, str) or not host.strip():
+        return {"status": "failed", "error": "Invalid input"}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    try:
+        subprocess.run(["ping", host], check=True)
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": str(e)}
 
     return {"status": "completed"}
