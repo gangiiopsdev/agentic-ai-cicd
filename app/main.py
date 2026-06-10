@@ -1,16 +1,29 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+
+class SafeCommandExecutor:
+    def __init__(self):
+        self.whitelisted_commands = ['ping']
+
+    def execute(self, command: str, *args):
+        if command not in self.whitelisted_commands:
+            raise ValueError(f"Invalid command: {command}")
+        args = shlex.split(command)
+        subprocess.call(args)
 
 app = FastAPI()
+safe_executor = SafeCommandExecutor()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def safe_ping(host: str):
+    if not host.strip().isalnum():
+        return {'status': 'error', 'message': 'Invalid input'}
+    try:
+        safe_executor.execute('ping', host)
+        return {'status': 'completed'}
+    except ValueError as e:
+        return {'status': 'error', 'message': str(e)}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    return safe_ping(host)
