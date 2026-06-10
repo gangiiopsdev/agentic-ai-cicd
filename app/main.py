@@ -1,16 +1,18 @@
 from fastapi import FastAPI
 import subprocess
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+bearer_scheme = HTTPBearer()
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Validate input to avoid command injection
+    if not host.isalnum():
+        return {'error': 'Invalid host'}, 400
+    result = subprocess.run(['ping', host], capture_output=True, text=True)
+    return {
+        "status": "completed",
+        "output": result.stdout,
+        "error": result.stderr if result.returncode != 0 else None
+    }
