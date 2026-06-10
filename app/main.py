@@ -1,16 +1,16 @@
 from fastapi import FastAPI
 import subprocess
+class SafePing:
+    def __init__(self):
+        self.allowed_hosts = ['127.0.0.1', '::1']
+
+    def ping(self, host: str):
+        if host in self.allowed_hosts:
+            subprocess.run(['ping', host], check=True, capture_output=True)
 
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+ping_instance = SafePing()
 
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def ping_route(host: str):
+    return ping_instance.ping(host)
