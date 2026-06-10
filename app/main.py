@@ -1,5 +1,10 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+
+global_config = {
+    "allowed_hosts": ["google.com", "example.com"]
+}
 
 app = FastAPI()
 
@@ -9,8 +14,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if host in global_config['allowed_hosts']:
+        subprocess.call(shlex.split(f'ping {host}'))
+    else:
+        return {"error": "Host not allowed"}
     return {"status": "completed"}
