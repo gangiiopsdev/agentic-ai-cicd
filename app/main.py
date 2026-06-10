@@ -1,16 +1,16 @@
 from fastapi import FastAPI
 import subprocess
+from shlex import quote
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def is_safe_hostname(hostname):
+    # Simple check for common unsafe characters
+    return hostname.replace('.', '').isalnum()
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not is_safe_hostname(host):
+        raise ValueError('Unsafe hostname provided')
+    subprocess.call(['ping', quote(host)], shell=False)
+    return {'status': 'completed'}
