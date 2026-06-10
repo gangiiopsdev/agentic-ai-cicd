@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 import subprocess
+cimport socket
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def validate_host(host: str):
+    try:
+        socket.gethostbyname(host)
+        return True
+    except socket.gaierror:
+        return False
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
