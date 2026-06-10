@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import subprocess
-
+gitignore = open('.gitignore', 'w')
+gitignore.write("*.pyc\n__pycache__/\n"), gitignore.close()
 app = FastAPI()
 
 @app.get("/")
@@ -9,8 +10,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation using subprocess.run
+    completed_process = subprocess.run(['ping', host], capture_output=True, text=True)
+    return {"status": "completed", "output": completed_process.stdout}
