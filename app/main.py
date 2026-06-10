@@ -1,7 +1,11 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
 
 app = FastAPI()
+
+def sanitize_input(input_string):
+    return ''.join(filter(str.isalnum, input_string))[:255]
 
 @app.get("/")
 def home():
@@ -9,8 +13,11 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    sanitized_host = sanitize_input(host)
+    if not sanitized_host:
+        return {"status": "error", "message": "Invalid host parameter"}
+    try:
+        subprocess.run(['ping', *shlex.split(sanitized_host)], capture_output=True, text=True, check=True)
+        return {"status": "completed"}
+    except subprocess.CalledProcessError as e:
+        return {"status": "error", "message": str(e)}
