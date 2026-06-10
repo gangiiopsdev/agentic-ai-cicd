@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 import subprocess
+def secure_ping(host: str):
+    # Sanitize input to prevent shell injection
+    sanitized_host = subprocess.list2cmdline([host])
+    subprocess.call(['ping', sanitized_host])
 
 app = FastAPI()
 
@@ -9,8 +13,5 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    secure_ping(host)
     return {"status": "completed"}
