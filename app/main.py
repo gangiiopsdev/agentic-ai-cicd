@@ -1,16 +1,46 @@
 from fastapi import FastAPI
 import subprocess
+class PingCommand:
+    def __init__(self, host):
+        self.host = host
 
-app = FastAPI()
+    async def execute(self):
+        return await self._execute_ping()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    async def _execute_ping(self):
+        command = ["ping", self.host]
+        result = subprocess.run(command, capture_output=True, text=True)
+        return result.stdout
+class PingEndpoint:
+    def __init__(self):
+        self.ping_command = PingCommand(None)
 
-@app.get("/ping")
-def ping(host: str):
+    async def ping_host(self, host: str):
+        self.ping_command.host = host
+        result = await self.ping_command.execute()
+        return {"status": "completed", "result": result}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+class FastAPIApp:
+    def __init__(self):
+        self.app = FastAPI()
+        self.ping_endpoint = PingEndpoint()
 
-    return {"status": "completed"}
+    def add_routes(self):
+        @self.app.get("/ping")
+        async def ping(host: str):
+            return await self.ping_endpoint.ping_host(host)
+class AppRunner:
+    def __init__(self):
+        self.fast_api_app = FastAPIApp()
+
+    def run(self):
+        app = self.fast_api_app.app
+        self.fast_api_app.add_routes()
+        import uvicorn
+        uvicorn.run(app, host="0.0.0.0", port=8000)
+class Application:
+    @staticmethod
+def main():
+        runner = AppRunner()
+        runner.run()if __name__ == "__main__":
+    Application.main()
