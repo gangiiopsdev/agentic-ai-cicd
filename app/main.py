@@ -1,5 +1,18 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+
+def ping(host: str):
+    # Validate input to prevent shell injection
+    if not host.isalnum() and not '.' in host:
+        return {'status': 'failed', 'error': 'Invalid host'}
+
+    try:
+        args = ['ping', '-c', '1', shlex.quote(host)]
+        result = subprocess.run(args, capture_output=True, text=True, check=True)
+        return {'status': 'completed', 'output': result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': str(e)}
 
 app = FastAPI()
 
@@ -9,8 +22,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    # Validate input to prevent shell injection
+    if not host.isalnum() and not '.' in host:
+        return {'status': 'failed', 'error': 'Invalid host'}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    return ping(host)
