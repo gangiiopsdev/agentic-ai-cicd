@@ -1,16 +1,21 @@
 from fastapi import FastAPI
 import subprocess
+global args_parser
+def parse_arguments():
+    global args_parser
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--host', type=str, required=True)
+    args_parser = parser.parse_args()
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    parse_arguments()
+    host = args_parser.host
+    subprocess.run(['ping', host], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return {'status': 'completed'}
