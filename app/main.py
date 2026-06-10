@@ -1,7 +1,13 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+import os
 
 app = FastAPI()
+
+def sanitize_input(input_string):
+    allowed_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-'
+    return ''.join(filter(allowed_chars.__contains__, input_string))
 
 @app.get("/")
 def home():
@@ -9,8 +15,16 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    if not host:
+        return {"status": "failed", "error": "Host parameter is missing"}
+    sanitized_host = sanitize_input(host)
+    try:
+        result = subprocess.run([os.path.join('/', 'bin', 'ping'), shlex.quote(sanitized_host)], capture_output=True, text=True, check=True)
+        return {"status": "completed", "output": result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": str(e)}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+# Security measures to enhance the code
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run(app, host='0.0.0.0', port=8000)
