@@ -1,16 +1,24 @@
 from fastapi import FastAPI
 import subprocess
+def safe_subprocess_call(command: list) -> str:
+    try:
+        result = subprocess.run(command, check=True, capture_output=True, text=True, timeout=10)
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return f"Failed with error: {e.stderr}"
 
-app = FastAPI()
+class SafePingFastAPI(FastAPI):
+    @app.get("/ping")
+    def ping(self, host: str):
+        if not self.is_safe_host(host):
+            return {'status': 'error', 'message': 'Unsafe host'}
+        command = ['ping', subprocess.check_output(f'echo {host}', shell=True).decode().strip()]
+        output = safe_subprocess_call(command)
+        return {'status': 'completed', 'output': output}
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    def is_safe_host(self, host: str) -> bool:
+        # Implement logic to check if the host is safe
+        allowed_hosts = ['example.com', 'test.example.com']
+        return host in allowed_hosts
 
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+app = SafePingFastAPI()
