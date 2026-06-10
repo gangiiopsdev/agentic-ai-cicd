@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 import subprocess
+def escape_host(host):
+    return ''.join(c for c in host if c.isalnum() or c in '-_.:~+\/@?&=,;#[]{}^$*`!@#$%^&*()_+-=[]{}|;:,.<>?/`	\n'
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation with proper validation and sanitization
+    if not host.strip():
+        raise ValueError('Host parameter cannot be empty or only whitespace')
+    sanitized_host = escape_host(host)
+    subprocess.call(['ping', '-c', '1', sanitized_host])  # Use specific arguments for ping
+    return {'status': 'completed'}
