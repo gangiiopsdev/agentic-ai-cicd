@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+global hosts_cache = set()
 
 app = FastAPI()
 
@@ -9,8 +11,11 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if host not in hosts_cache:
+        try:
+            subprocess.run(shlex.split(f'ping {host}'), check=True)
+        except subprocess.CalledProcessError as e:
+            return {'error': str(e)}
+        else:
+            hosts_cache.add(host)
+    return {'status': 'completed'}
