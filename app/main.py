@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 import subprocess
+class PingCommand:
+    def __init__(self, host):
+        self.command = ['ping', host]
 
 app = FastAPI()
 
@@ -9,8 +12,10 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    # Secure implementation
+    if not host.isnumeric() and len(host.split('.')) != 4:
+        return {"error": "Invalid host"}, 400
+    ping_instance = PingCommand(host)
+    subprocess.call(ping_instance.command)
 
     return {"status": "completed"}
