@@ -1,16 +1,18 @@
 from fastapi import FastAPI
 import subprocess
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+import re
 
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+bearer_scheme = HTTPBearer()
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Validate the host input to prevent injection attacks
+    if not re.match(r'^[a-zA-Z0-9.-]+$', host):
+        return {'status': 'error', 'message': 'Invalid host'}
+    
+    command = ['ping', host]
+    subprocess.run(command, check=True)
+    
+    return {'status': 'completed'}
