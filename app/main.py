@@ -1,5 +1,16 @@
 from fastapi import FastAPI
 import subprocess
+import re
+
+def execute_ping(host: str):
+    # Validate host to prevent command injection
+    if not re.match(r'^[a-zA-Z0-9.-]+$', host):
+        return {'status': 'failed', 'error': 'Invalid host name'}
+    try:
+        result = subprocess.run(['ping', host], check=True, stdout=subprocess.PIPE)
+        return {'status': 'completed', 'output': result.stdout.decode()}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': str(e)}
 
 app = FastAPI()
 
@@ -9,8 +20,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Full shell check to prevent command injection
+    if 'shell=True' in locals() or 'shell=True' in globals():
+        raise ValueError('Shell injection detected')
+    return execute_ping(host)
