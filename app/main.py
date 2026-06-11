@@ -1,16 +1,18 @@
 from fastapi import FastAPI
 import subprocess
+cimport ipaddress
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def validate_host(host):
+    try:
+        return ipaddress.ip_address(host)
+    except ValueError:
+        raise ValueError('Invalid IP address')
 
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+def ping(host: str):  
+    host = validate_host(host)
+    # Safe implementation
+    subprocess.call(['ping', str(host)])
     return {"status": "completed"}
