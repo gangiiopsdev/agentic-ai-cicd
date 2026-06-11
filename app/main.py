@@ -1,6 +1,23 @@
 from fastapi import FastAPI
 import subprocess
+class PingCommand:
+    def __init__(self, host):
+        self.host = host
 
+    def execute(self):
+        try:
+            result = subprocess.run(['ping', self.host], capture_output=True, text=True, check=True, shell=False)
+            return {'status': 'completed', 'output': result.stdout}
+        except subprocess.CalledProcessError as e:
+            return {'status': 'failed', 'error': e.stderr}
+class PingEndpoint:
+    def __init__(self):
+        self.ping_command = PingCommand()
+
+    def ping(self, host: str):
+        if not all(c.isalnum() or c in '-.' for c in host):
+            return {'status': 'failed', 'error': 'Invalid hostname'}
+        return self.ping_command.execute()
 app = FastAPI()
 
 @app.get("/")
@@ -9,8 +26,5 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    endpoint = PingEndpoint()
+    return endpoint.ping(host)
