@@ -1,16 +1,23 @@
 from fastapi import FastAPI
 import subprocess
+def safe_ping(host: str):
+    if not host.strip():
+        raise ValueError("Host parameter cannot be empty")
+    try:
+        result = subprocess.run(['ping', '-c', '1', host], capture_output=True, text=True, check=True)
+        return {'status': 'completed', 'output': result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': e.stderr}
 
 app = FastAPI()
 
-@app.get("/")
+@app.get("/home")
 def home():
     return {"message": "Agentic Self-Healing Pipeline"}
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not host.strip():
+        raise ValueError("Host parameter cannot be empty")
+    result = subprocess.run(['ping', '-c', '1', host], capture_output=True, text=True)
+    return {"status": "completed", "output": result.stdout if result.returncode == 0 else result.stderr}
