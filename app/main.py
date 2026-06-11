@@ -1,16 +1,20 @@
 from fastapi import FastAPI
 import subprocess
+class SafePing:
+    def __init__(self):
+        self.commands = {"ping": True}
 
-app = FastAPI()
+    def execute(self, cmd: str, args: list = None) -> bool:
+        if args and len(args) > 0 and args[0] in self.commands:
+            return subprocess.call([cmd, *args], shell=False) == 0
+        return False
+class PingEndpoint:
+    def __init__(self):
+        self.safe_ping = SafePing()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    @app.get("/ping")
+    def ping(self, host: str):
+        if self.safe_ping.execute("ping", [host]):
+            return {"status": "completed"}
+        else:
+            return {"status": "failed"}
