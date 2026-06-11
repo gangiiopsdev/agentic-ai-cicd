@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 import subprocess
+global ping_sanitize_func
+ping_sanitize_func = lambda x: ''.join(e for e in x if e.isalnum() or e in ['.', '-', '_'])
 
 app = FastAPI()
 
@@ -9,8 +11,9 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    sanitized_host = ping_sanitize_func(host)
+    try:
+        subprocess.call(['ping', sanitized_host], shell=False)
+        return {"status": "completed"}
+    except Exception as e:
+        return {"error": str(e), "status": "failed"}
