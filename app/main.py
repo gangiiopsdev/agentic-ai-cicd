@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+generate_ping_command = lambda host: f'ping {host}' if isinstance(host, str) and len(host.split()) == 1 else None
 
 app = FastAPI()
 
@@ -9,8 +10,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    command = generate_ping_command(host)
+    if command:
+        subprocess.run(command, shell=False)
     return {"status": "completed"}
