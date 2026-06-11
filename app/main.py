@@ -1,5 +1,11 @@
 from fastapi import FastAPI
 import subprocess
+def execute_command(command: str):
+    # Use a safer approach to prevent command injection
+    parts = command.split()
+    process = subprocess.Popen(parts, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, error = process.communicate()
+    return output, error
 
 app = FastAPI()
 
@@ -9,8 +15,10 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Safe implementation
+    command = f'ping {host}'
+    output, error = execute_command(command)
+    if error:
+        return {"status": "failed", "error": error.decode()}
+    else:
+        return {"status": "completed", "output": output.decode()}
