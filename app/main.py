@@ -9,8 +9,13 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    # Secure implementation
+    try:
+        result = subprocess.run(['ping', host], capture_output=True, text=True, check=True)
+        return {"status": "completed", "output": result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {"status": "error", "output": str(e)}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+# Preventive controls:
+# 1. Validate and sanitize user input to ensure it does not contain malicious content.
+# 2. Use absolute paths for all executable commands in the subprocess call.
