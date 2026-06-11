@@ -1,5 +1,16 @@
 from fastapi import FastAPI
 import subprocess
+class SafePing:
+    @staticmethod
+def safe_ping(host):
+        if host and isinstance(host, str) and not ('ping' in host or 'traceroute' in host):
+            try:
+                result = subprocess.run(['ping', host], capture_output=True, text=True, check=True)
+                return result.stdout
+            except subprocess.CalledProcessError as e:
+                return str(e)
+        else:
+            return None
 
 app = FastAPI()
 
@@ -9,8 +20,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    result = SafePing.safe_ping(host)
+    if result is None:
+        return {"error": "Invalid host"}
+    else:
+        return {"status": "completed", "result": result}
