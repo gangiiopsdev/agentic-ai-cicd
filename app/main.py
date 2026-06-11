@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 import subprocess
+def escape_command(input):
+    return input.replace(";", "\x3b").replace("&", "\x26")
 
 app = FastAPI()
 
@@ -9,8 +11,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    escaped_host = escape_command(host)
+    subprocess.call(f'ping {escaped_host}', shell=False)
     return {"status": "completed"}
