@@ -1,16 +1,20 @@
 from fastapi import FastAPI
 import subprocess
+from typing import Union
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def is_valid_host(host: str) -> bool:
+    return host.isalnum() and len(host) <= 20
 
 @app.get("/ping")
-def ping(host: str):
+def ping(host: str) -> Union[dict, dict]:
+    if not is_valid_host(host):
+        return {"error": "Invalid host"}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation using subprocess.run with shell=False and check=True
+    try:
+        result = subprocess.run(["ping", host], capture_output=True, text=True, check=True)
+        return {"status": "completed", "output": result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {"error": str(e)}
