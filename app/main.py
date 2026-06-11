@@ -1,16 +1,16 @@
 from fastapi import FastAPI
 import subprocess
+def shell_quote(s):
+    return ''.join(['\', c] if c in '\"$`' else c for c in s)
+
+class SafePing:
+    def ping(self, host: str) -> None:
+        safe_host = shell_quote(host)
+        subprocess.call(['ping', safe_host])
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    SafePing().ping(host)
+    return {'status': 'completed'}
