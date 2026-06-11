@@ -9,8 +9,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Fixed implementation using subprocess.run with shell=False and shlex.split to safely handle the command arguments
+    subprocess.run(shlex.split(f"ping {host}"), check=True)
     return {"status": "completed"}
