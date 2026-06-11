@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+from fastapi import HTTPException
 
 app = FastAPI()
 
@@ -9,8 +10,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Validate and sanitize input
+    if not host.isalnum() or len(host) > 32:
+        raise HTTPException(status_code=400, detail="Invalid host parameter")
+    subprocess.call(['ping', host])
     return {"status": "completed"}
