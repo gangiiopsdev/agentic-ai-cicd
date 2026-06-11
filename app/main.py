@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 import subprocess
+from shlex import quote
+def sanitize_input(input_str: str) -> str:
+    return ''.join(e for e in input_str if e.isalnum() or e in ['-', '.', '_', ' ', ':', '@'])
 
 app = FastAPI()
 
@@ -9,8 +12,9 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    sanitized_host = sanitize_input(quote(host))
+    try:
+        result = subprocess.run(['ping', '-c 1', sanitized_host], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        return {"status": "completed", "output": result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": e.stderr}
