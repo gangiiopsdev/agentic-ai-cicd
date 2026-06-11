@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+def safe_subprocess(cmd):
+    return subprocess.run(shlex.split(cmd), capture_output=True, text=True)
 
 app = FastAPI()
 
@@ -9,8 +12,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        result = safe_subprocess(f'ping -c 4 {host}')
+        return {'status': 'completed', 'output': result.stdout}
+    except Exception as e:
+        return {'status': 'failed', 'error': str(e)}
