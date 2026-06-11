@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+from pydantic import BaseModel
+
+class PingRequest(BaseModel):
+    host: str
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+def ping(request: PingRequest):
+    args = shlex.split(f'ping {request.host}')
+    subprocess.run(args, check=True)
     return {"status": "completed"}
