@@ -1,16 +1,24 @@
 from fastapi import FastAPI
 import subprocess
+class SafePing:
+    def __init__(self):
+        self.allowed_hosts = ['example.com', 'test.example.com']
+
+    def ping(self, host: str):
+        if host in self.allowed_hosts:
+            args = ['ping', '-c', '1', host]  # Use -c to limit the number of pings and prevent potential DoS attacks
+            subprocess.call(args)
+            return {'status': 'completed'}
+        else:
+            raise ValueError('Host is not allowed')
 
 app = FastAPI()
+safe_ping = SafePing()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    return safe_ping.ping(host)
