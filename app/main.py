@@ -1,16 +1,18 @@
 from fastapi import FastAPI
 import subprocess
+import re
+def safe_ping(host):
+    # Validate host input to ensure it does not contain malicious content
+    if not host or 'ping' in host.lower() or re.search(r'[<>|&]', host):
+        raise ValueError('Invalid host input')
+    return host  # Ensure the function returns a sanitized host value
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        result = subprocess.run(['ping', '-c', '1', safe_ping(host)], check=True, capture_output=True, text=True)
+        return {'status': 'completed', 'output': result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': str(e)}
