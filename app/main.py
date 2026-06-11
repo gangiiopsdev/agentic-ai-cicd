@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+glances = [host for host in (os.environ['ALLOWED_HOSTS'].split(','))]
 
 app = FastAPI()
 
@@ -9,8 +10,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if host in glances:
+        subprocess.call(f'ping {host}')
+    else:
+        return {'status': 'invalid_host'}
     return {"status": "completed"}
