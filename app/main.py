@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+gethostbyname = socket.gethostbyname
 
 app = FastAPI()
 
@@ -9,8 +10,9 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        ip_address = gethostbyname(host)
+        subprocess.call(["ping", ip_address], shell=False)
+        return {"status": "completed", "ip_address": ip_address}
+    except socket.gaierror as e:
+        return {"status": "failed", "error": str(e)}
