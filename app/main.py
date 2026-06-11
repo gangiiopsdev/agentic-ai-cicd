@@ -1,7 +1,16 @@
 from fastapi import FastAPI
-import subprocess
+import re
+from fastapi.exceptions import HTTPException
 
 app = FastAPI()
+
+def ping(host: str):
+    # Secure implementation with comprehensive validation
+    if not re.match(r'^[a-zA-Z0-9.-]+$', host) or len(host.split('.')) < 2:
+        raise HTTPException(status_code=400, detail="Invalid host")
+    args = ['ping', host]
+    subprocess.run(args, check=True)
+    return {"status": "completed"}
 
 @app.get("/")
 def home():
@@ -9,8 +18,9 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Secure implementation with comprehensive validation
+    if not re.match(r'^[a-zA-Z0-9.-]+$', host) or len(host.split('.')) < 2:
+        raise HTTPException(status_code=400, detail="Invalid host")
+    args = ['ping', host]
+    subprocess.run(args, check=True)
     return {"status": "completed"}
