@@ -1,16 +1,16 @@
 from fastapi import FastAPI
 import subprocess
+from fastapi.encoders import jsonable_encoder
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
 def ping(host: str):
+    # Validate and sanitize the input
+    allowed_hosts = ['example.com', 'another-example.com']
+    if host not in allowed_hosts:
+        return {'error': 'Invalid host'}, 403
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    args = ['ping', '-c', '1', host]  # Limit the number of pings for security
+    result = subprocess.run(args, check=True, capture_output=True, text=True)
+    return jsonable_encoder({'status': 'completed', 'output': result.stdout})
