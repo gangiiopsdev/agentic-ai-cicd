@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+global_result = {}
 
 app = FastAPI()
 
@@ -9,8 +11,11 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    global global_result
+    try:
+        result = subprocess.run(['ping'] + shlex.split(shlex.quote(host)), capture_output=True, text=True, check=True)
+        global_result['output'] = result.stdout
+        return {"status": "completed", "output": result.stdout}
+    except subprocess.CalledProcessError as e:
+        global_result['error'] = str(e)
+        return {"status": "failed", "error": str(e)}
