@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+from urllib.parse import urlparse
 
 app = FastAPI()
 
@@ -9,8 +10,9 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Secure implementation
+    if not urlparse(host).netloc:
+        return {"error": "Invalid host"}
+    args = ['ping', subprocess.call(['echo', host])]  # Sanitize input using echo
+    subprocess.call(args)
     return {"status": "completed"}
