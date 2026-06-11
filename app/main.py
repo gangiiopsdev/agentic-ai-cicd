@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 import subprocess
+import os
 
-app = FastAPI()
+gapp = FastAPI()
 
 @app.get("/")
 def home():
@@ -9,8 +10,11 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation using subprocess.run with proper argument handling and input validation
+    if not host.isalnum() or len(host) > 64:
+        raise ValueError("Invalid host parameter")
+    try:
+        result = subprocess.run(['ping', '-c', '1', host], capture_output=True, text=True)
+    except Exception as e:
+        return {"status": "error", "output": str(e)}
+    return {"status": "completed", "output": result.stdout}
