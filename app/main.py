@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+cimport socketio
 
 app = FastAPI()
 
@@ -9,8 +10,11 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    try:
+        # Validate the host to ensure it's a valid IP or hostname
+        socket.inet_pton(socket.AF_INET, host)
+        subprocess.call(["ping", host])
+    except socket.error:
+        return {"error": "Invalid host"}
 
     return {"status": "completed"}
