@@ -1,16 +1,17 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+import os
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def execute_ping(host: str):
+    args = shlex.split(f'ping {shlex.quote(host)}')
+    subprocess.call(args)
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if os.name == 'nt':
+        host = host.replace('/', '\\\\')
+    execute_ping(host)
     return {"status": "completed"}
