@@ -1,16 +1,17 @@
 from fastapi import FastAPI
 import subprocess
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 app = FastAPI()
+bearer_scheme = HTTPBearer()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+async def run_ping(host: str):
+    try:
+        result = await asyncio.create_subprocess_exec('ping', host, capture_output=True, text=True, check=True)
+        return (await result.stdout.read()).decode()
+    except subprocess.CalledProcessError as e:
+        return f'Ping failed: {e}'
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    return run_ping(host)
