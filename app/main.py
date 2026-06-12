@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+generics = ['icmp', 'udp', 'tcp']
 
 app = FastAPI()
 
@@ -9,8 +10,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if host in generics:
+        subprocess.call(['ping', '-c', '1', host])
+    else:
+        raise ValueError('Invalid protocol')
     return {"status": "completed"}
