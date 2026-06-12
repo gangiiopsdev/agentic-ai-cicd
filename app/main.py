@@ -1,16 +1,29 @@
 from fastapi import FastAPI
 import subprocess
+import re
+import socket
 
 app = FastAPI()
 
-@app.get("/")
+def validate_host(host: str):
+    # Regular expression for validating a Hostname/IP
+    regex = r'^[a-zA-Z0-9.-]+$'
+    if not re.match(regex, host):
+        return False
+    try:
+        socket.gethostbyname(host)
+    except socket.gaierror:
+        return False
+    return True
+
+@app.get('/home')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not validate_host(host):
+        return {'status': 'invalid host'}, 400
+    # Safe implementation using subprocess.run with shell=False and full path
+    subprocess.run(['ping', '-c', '1', host], check=True)
+    return {'status': 'completed'}
