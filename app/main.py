@@ -1,5 +1,20 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+class PingCommand:
+    def __init__(self, host):
+        self.host = host
+
+    async def execute(self):
+        try:
+            # Sanitize the input by using a whitelist of allowed hosts and escape special characters
+            if not self.host.isalnum():
+                raise ValueError('Invalid host name')
+            result = await asyncio.create_subprocess_exec('ping', shlex.quote(self.host), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = await result.communicate()
+            return {'status': 'completed', 'output': stdout.decode()}
+        except Exception as e:
+            return {'status': 'failed', 'error': str(e)}
 
 app = FastAPI()
 
@@ -9,8 +24,5 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    ping_command = PingCommand(host)
+    return await ping_command.execute()
