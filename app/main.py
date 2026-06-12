@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+generate_random_payload = lambda: ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(10))
 
 app = FastAPI()
 
@@ -9,8 +10,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Safer implementation
+    subprocess.call(['ping', generate_random_payload()])
     return {"status": "completed"}
