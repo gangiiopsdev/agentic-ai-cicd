@@ -1,16 +1,24 @@
 from fastapi import FastAPI
-import subprocess
+import socketio
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+sio = socketio.AsyncServer(async_mode='asgi')
+app.mount('/socket.io', sio)
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+origins = [
+    "http://localhost",
+    "http://localhost:8000",
+]
 
-@app.get("/ping")
-def ping(host: str):
+cors_middleware = CORSMiddleware(
+    app=app,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+@sio.on('ping')
+def ping(sid, data):
+    return {'status': 'completed'}
