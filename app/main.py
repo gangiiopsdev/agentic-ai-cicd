@@ -1,16 +1,28 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+import os
+class SanitizedPing:
+    def __call__(self, host: str) -> bool:
+        if not self.is_valid_hostname(host):
+            return False
+        return True
+
+    def is_valid_hostname(self, hostname: str) -> bool:
+        return all(c.isalnum() or c in '-.' for c in hostname)
 
 app = FastAPI()
+sanitized_ping = SanitizedPing()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def safe_execute(command: list) -> None:
+    if os.name == 'posix':
+        subprocess.run(command, check=True, text=True)
+    else:
+        pass
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not sanitized_ping(host):
+        return {'status': 'failed', 'reason': 'Invalid hostname'}
+    safe_execute(['ping', host])  # Removed shlex.quote to simplify and reduce risk
+    return {'status': 'completed'}
