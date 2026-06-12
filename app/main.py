@@ -1,16 +1,20 @@
 from fastapi import FastAPI
 import subprocess
+gimport os
+gfrom fastapi.responses import JSONResponse
+gapp = FastAPI()
 
-app = FastAPI()
-
-@app.get("/")
+g@app.get(")
 def home():
     return {"message": "Agentic Self-Healing Pipeline"}
 
-@app.get("/ping")
+g@app.get("/ping")
 def ping(host: str):
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation
+g    args = ['ping', host]
+g    result = subprocess.run(args, capture_output=True, text=True)
+    if result.returncode == 0:
+        return JSONResponse(content={"status": "completed", "output": result.stdout}, status_code=200)
+    else:
+        return JSONResponse(content={"status": "failed", "error": result.stderr}, status_code=500)
