@@ -3,14 +3,16 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def is_safe_hostname(hostname):
+    return all(c.isalnum() or c in ['-', '.', '_'] for c in hostname)
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if not is_safe_hostname(host):
+        return {"status": "failed", "error": "Invalid hostname"}
+    args = ['ping', host]
+    try:
+        subprocess.check_output(args, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": e.output.decode()}
     return {"status": "completed"}
