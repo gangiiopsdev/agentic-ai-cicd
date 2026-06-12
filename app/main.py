@@ -3,14 +3,15 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def safe_clone_repo(repo_url):
+    # Validate the repository URL before cloning
+    if not repo_url.startswith('https://github.com/'):
+        raise ValueError('Invalid repository URL')
+    try:
+        subprocess.run(['git', 'clone', repo_url], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f'Failed to clone repository: {e}')
 
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+@app.post('/clone_repo/')
+def clone_repo(repo_url: str):
+    safe_clone_repo(repo_url)
