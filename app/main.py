@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 import subprocess
+import re
 
-app = FastAPI()
+def validate_host(host):
+    return re.match(r'^[a-zA-Z0-9.-]+$', host)
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+@app.get('/ping')
+def ping(host: str):    
+    if not validate_host(host):
+        return {'error': 'Invalid host'}, 400
 
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Use a fully qualified path for the command to mitigate risks and avoid shell=True
+    subprocess.run(['/usr/bin/ping', '-c', '1', host], check=True, shell=False)
+    return {'status': 'completed'}
