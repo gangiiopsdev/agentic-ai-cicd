@@ -1,16 +1,22 @@
 from fastapi import FastAPI
 import subprocess
 
+def sanitize_host(host: str) -> str:
+    allowed_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-'
+    return ''.join(char for char in host if char in allowed_chars)
+
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    sanitized_host = sanitize_host(host)
+    if '.' in sanitized_host and all(char.isalnum() or char == '.' for char in sanitized_host):
+        args = ['ping', sanitized_host]
+        # Use a safer approach to prevent shell injection
+        try:
+            result = subprocess.run(args, capture_output=True, text=True, check=True)
+            return {'status': 'completed', 'output': result.stdout}
+        except subprocess.CalledProcessError as e:
+            return {'error': f'Ping failed: {e.stderr}'
+    else:
+        return {'error': 'Invalid input'}
