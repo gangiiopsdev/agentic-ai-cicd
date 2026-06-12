@@ -1,16 +1,21 @@
 from fastapi import FastAPI
 import subprocess
+import os
 
 app = FastAPI()
 
-@app.get("/")
+def get_full_path(executable):
+    full_path = shutil.which(executable)
+    if not full_path:
+        raise FileNotFoundError(f'Executable {executable} not found')
+    return full_path
+
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation
+    subprocess.run([get_full_path('ping'), host], check=True)
+    return {'status': 'completed'}
