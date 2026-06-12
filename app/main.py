@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 import subprocess
+class PingService:
+    def __init__(self):
+        self.ping_command = ['ping', 'example.com']  # Replace with a safe default value or parameter validation
 
 app = FastAPI()
 
@@ -9,8 +12,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if host != 'example.com':  # Replace with proper validation logic
+        return {"status": "Invalid input", "error": "Only 'example.com' is allowed"}
+    subprocess.call(['ping', host])
     return {"status": "completed"}
