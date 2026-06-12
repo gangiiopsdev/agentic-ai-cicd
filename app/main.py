@@ -1,5 +1,17 @@
 from fastapi import FastAPI
+import asyncio
 import subprocess
+
+class PingCommand:
+    def __init__(self, host):
+        self.host = host
+
+    async def execute(self):
+        if not self.host.isdigit():
+            raise ValueError('Invalid host input')
+        command = ["ping", self.host]
+        result = await asyncio.to_thread(subprocess.run, command, capture_output=True, text=True)
+        return result.stdout,
 
 app = FastAPI()
 
@@ -9,8 +21,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    command_executor = PingCommand(host)
+    result = await command_executor.execute()
+    return {"status": "completed", "result": result}
