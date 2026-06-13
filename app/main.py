@@ -1,16 +1,21 @@
 from fastapi import FastAPI
 import subprocess
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 app = FastAPI()
+security = HTTPBasic()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+async def verify_password(username: str, password: str):
+    # Replace with actual authentication logic
+    return username == 'admin' and password == 'secret'
 
-@app.get("/ping")
-def ping(host: str):
+@app.get('/ping')
+def ping(credentials: HTTPBasicCredentials = Depends(security)):
+    if not await verify_password(credentials.username, credentials.password):
+        raise HTTPException(status_code=401, detail='Incorrect email or password', headers={'WWW-Authenticate': 'Basic realm="secret"'})
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    host = credentials.username
+    # Sanitize user input
+    safe_host = ''.join(filter(str.isalnum, host))
+    result = subprocess.run(['ping', '-c 1', safe_host], capture_output=True, text=True)
+    return {'status': 'completed', 'output': result.stdout}
