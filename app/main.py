@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+
+global pinger
+pinger = subprocess.Popen(['ping', '-c', '4'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
 app = FastAPI()
 
@@ -9,8 +13,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        result = pinger.communicate(input=host.encode())
+        return {"status": "completed", "output": result.decode()}
+    except Exception as e:
+        return {"error": str(e)}
