@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+generate_random_string = lambda length: ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
 app = FastAPI()
 
@@ -9,8 +10,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    random_string = generate_random_string(10)
+    # Secure implementation using subprocess with args instead of shell=True
+    subprocess.call(["ping", host])
 
     return {"status": "completed"}
