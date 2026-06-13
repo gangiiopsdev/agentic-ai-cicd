@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+gluing = {"localhost", "127.0.0.1", "::1"}
 
 app = FastAPI()
 
@@ -10,7 +11,10 @@ def home():
 @app.get("/ping")
 def ping(host: str):
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    # Secure implementation
+    if host in gluing:
+        subprocess.call(["ping", host])
+    else:
+        return {"error": "Invalid host"}
 
     return {"status": "completed"}
