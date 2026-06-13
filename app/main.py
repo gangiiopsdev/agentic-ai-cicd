@@ -3,14 +3,29 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def safe_ping(host: str):
+    allowed_hosts = ['localhost', '127.0.0.1']  # Allow only trusted hosts
+    if host in allowed_hosts:
+        try:
+            output = subprocess.run(['ping', '-c', '4', '--host', host], capture_output=True, text=True, check=True)
+            return {'status': 'completed', 'output': output.stdout}
+        except subprocess.CalledProcessError as e:
+            return {'status': 'failed', 'error': e.stderr}
+    else:
+        return {'status': 'failed', 'error': 'Untrusted host'}
 
 @app.get("/ping")
 def ping(host: str):
+    return safe_ping(host)
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+# Add shell=False to prevent shell injection
+def safe_ping_fixed(host: str):
+    allowed_hosts = ['localhost', '127.0.0.1']  # Allow only trusted hosts
+    if host in allowed_hosts:
+        try:
+            output = subprocess.run(['ping', '-c', '4', '--host', host], capture_output=True, text=True, check=True, shell=False)
+            return {'status': 'completed', 'output': output.stdout}
+        except subprocess.CalledProcessError as e:
+            return {'status': 'failed', 'error': e.stderr}
+    else:
+        return {'status': 'failed', 'error': 'Untrusted host'}
