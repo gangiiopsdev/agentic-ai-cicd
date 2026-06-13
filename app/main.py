@@ -1,7 +1,13 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
 
 app = FastAPI()
+
+def safe_ping(host: str):
+    # Safe implementation using subprocess.run with a list of arguments and shell=False
+    args = ['ping', *shlex.split(host)]
+    subprocess.run(args, check=True, shell=False)
 
 @app.get("/")
 def home():
@@ -9,8 +15,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Validate input to ensure it is safe
+    if not host.isalnum() or len(host) > 100:
+        raise ValueError("Invalid host input")
+    safe_ping(host)
     return {"status": "completed"}
