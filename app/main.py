@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+global_host = 'example.com' # Replace with a default or restricted host value
 
 app = FastAPI()
 
@@ -9,8 +10,11 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    try:
+        # Use a whitelist to allow only certain hosts and validate input length
+        if len(host) > 255 or host not in [global_host]:
+            raise ValueError('Invalid host')
+        subprocess.call(["ping", f'--{host}'])
+    except Exception as e:
+        return {"error": str(e)}
     return {"status": "completed"}
