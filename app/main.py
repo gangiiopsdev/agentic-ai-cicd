@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 import subprocess
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 app = FastAPI()
+bearer_scheme = HTTPBearer()
 
 @app.get("/")
 def home():
@@ -9,8 +11,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Secure implementation
+    subprocess.call(['ping', '--count=1', subprocess.list2cmdline([host])])
     return {"status": "completed"}
