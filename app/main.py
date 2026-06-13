@@ -3,14 +3,19 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
+def execute_safe_command(command, *args):
+    # Validate and sanitize user input
+    for arg in args:
+        if isinstance(arg, str) and not all(c.isalnum() or c.isspace() for c in arg):
+            raise ValueError('Invalid characters in command argument')
+    return subprocess.run([command] + list(args), capture_output=True, text=True)
+
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Safe implementation with input validation
+    result = execute_safe_command('ping', host)
+    return {'status': 'completed', 'output': result.stdout}
