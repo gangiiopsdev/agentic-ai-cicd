@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+generate_ping_command = lambda host: ["ping", host]
 
 app = FastAPI()
 
@@ -9,8 +10,12 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    # Sanitize input to prevent command injection
+    if not host.isalnum() or len(host) > 255:
+        return {"status": "error", "message": "Invalid host name"}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Use subprocess.run instead of subprocess.call for better control and security
+    result = subprocess.run(generate_ping_command(host), capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        return {"status": "error", "message": "Ping command failed: " + result.stderr}
+    return {"status": "completed", "output": result.stdout}
