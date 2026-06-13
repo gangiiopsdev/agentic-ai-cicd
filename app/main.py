@@ -1,16 +1,22 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 import subprocess
+from pydantic import BaseModel
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+class PingRequest(BaseModel):
+    host: str
 
-@app.get("/ping")
-def ping(host: str):
+def validate_host(host):
+    if not re.match(r'^[a-zA-Z0-9.-]+$', host):
+        raise ValueError('Invalid host')
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+@app.get('/ping')
+def ping(request: Request, host: str):  # Use Pydantic model to validate input
+    try:
+        validate_host(host)
+        result = subprocess.run(['ping', host], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return JSONResponse({'status': 'completed', 'output': result.stdout.decode()})
+    except (subprocess.CalledProcessError, ValueError) as e:
+        return JSONResponse({'status': 'failed', 'error': str(e)}, status_code=400)
