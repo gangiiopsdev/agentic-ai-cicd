@@ -1,16 +1,28 @@
 from fastapi import FastAPI
 import subprocess
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+import urllib.parse
 
 app = FastAPI()
+bearer_scheme = HTTPBearer()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+async def get_current_user(token: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+    return token.credentials
 
 @app.get("/ping")
 def ping(host: str):
+    host = urllib.parse.quote(host)
+    if is_safe_host(host):
+        try:
+            result = subprocess.run(['ping', '-c', '4', host], capture_output=True, text=True, check=True)
+            return {'output': result.stdout}
+        except subprocess.CalledProcessError as e:
+            return {'error': str(e)}
+    return {'error': 'Invalid or too long host'}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def is_safe_host(host):
+    allowed_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-'
+    for char in host:
+        if char not in allowed_chars:
+            return False
+    return len(host) <= 15
