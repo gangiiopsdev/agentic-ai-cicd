@@ -1,16 +1,21 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+class SafePinger:
+    def __init__(self):
+        self.allowed_hosts = ['example.com', 'localhost']
 
-app = FastAPI()
+    def ping(self, host: str):
+        if host not in self.allowed_hosts:
+            raise ValueError('Unauthorized host')
+        safe_host = shlex.quote(host)
+        subprocess.call(['ping', safe_host])
+class PingRouter:
+    def __init__(self, pinger: SafePinger):
+        self.pinger = pinger
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    @app.get('/ping')
+    def ping(self, host: str):
+        return {'status': 'completed', 'response': self.pinger.ping(host)}
+pinger = SafePinger()
+ping_router = PingRouter(pinger)
