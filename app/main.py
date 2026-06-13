@@ -9,8 +9,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Fixed implementation using a whitelist for allowed hosts
+    allowed_hosts = ['127.0.0.1', '::1']  # Add more if needed
+    if host in allowed_hosts:
+        subprocess.call(["ping", host], shell=False)
     return {"status": "completed"}
