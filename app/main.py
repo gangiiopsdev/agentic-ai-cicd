@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 import subprocess
+from fastapi.responses import JSONResponse
+from shlex import quote as cmd_quote
+
+cmd = ['ping', '-c', '1', cmd_quote(host)]
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not host.isalnum():
+        raise ValueError('Invalid host input')
+    result = subprocess.check_output(cmd, stderr=subprocess.STDOUT, text=True)
+    return {'status': 'completed', 'result': result}
