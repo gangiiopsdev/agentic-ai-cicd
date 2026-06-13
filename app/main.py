@@ -9,8 +9,22 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    # Secure implementation
+    try:
+        result = subprocess.run(['ping', host], capture_output=True, text=True, check=True)
+        return {"status": "completed", "output": result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": str(e)}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+# Sanitize input to prevent command injection
+import re
 
-    return {"status": "completed"}
+@app.get("/ping")
+def ping(host: str):
+    if not re.match(r'^[a-zA-Z0-9.-]+$', host):
+        return {"status": "failed", "error": "Invalid input"}
+    try:
+        result = subprocess.run(['ping', host], capture_output=True, text=True, check=True)
+        return {"status": "completed", "output": result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": str(e)}
