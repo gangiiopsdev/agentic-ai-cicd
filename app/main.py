@@ -1,16 +1,22 @@
 from fastapi import FastAPI
 import subprocess
+import re
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def sanitize_host(host):
+    safe_host = re.sub(r'[^a-zA-Z0-9.-]', '', host)
+    return safe_host
 
-@app.get("/ping")
+def execute_ping_command(safe_host):
+    try:
+        result = subprocess.run(['ping', '-c', '1', safe_host], capture_output=True, check=True, shell=False)
+        return {'status': 'completed', 'output': result.stdout.decode()}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': e.stderr.decode()}
+
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Sanitize host input
+    safe_host = sanitize_host(host)
+    return execute_ping_command(safe_host)
