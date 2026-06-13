@@ -1,5 +1,10 @@
 from fastapi import FastAPI
-import subprocess
+import shlex
+
+class ShellCommand:
+    @staticmethod
+def build_safe_command(command: str, arg: str):
+        return f'{command} {shlex.quote(arg)}'
 
 app = FastAPI()
 
@@ -9,8 +14,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Ensure the host input is sanitized to prevent shell injection
+    safe_command = ShellCommand.build_safe_command('ping', host)
+    return {"safe_command": safe_command}
