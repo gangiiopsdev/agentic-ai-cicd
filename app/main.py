@@ -1,16 +1,19 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+cimport = ('ping', 'localhost')
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/home')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation
+    if host not in cimport:
+        return {'error': 'Invalid host'}
+    cmd = ['ping'] + shlex.split(host)
+    subprocess.run(cmd, check=True)
+    return {'status': 'completed'}
