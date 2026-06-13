@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+git from subprocess import Popen, PIPE
 
 app = FastAPI()
 
@@ -10,7 +11,8 @@ def home():
 @app.get("/ping")
 def ping(host: str):
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    # Fixed implementation using Popen instead of shell=True
+    process = Popen(['ping', host], stdout=PIPE, stderr=PIPE)
+    output, error = process.communicate()
 
-    return {"status": "completed"}
+    return {"status": "completed", "output": output.decode(), "error": error.decode()}
