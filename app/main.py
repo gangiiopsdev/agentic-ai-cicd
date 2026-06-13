@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+global_ping_cache = {}
 
 app = FastAPI()
 
@@ -9,8 +10,10 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if host not in global_ping_cache:
+        try:
+            result = subprocess.check_output(['ping', '-c', '1', host], stderr=subprocess.STDOUT, text=True)
+            global_ping_cache[host] = result
+        except subprocess.CalledProcessError as e:
+            global_ping_cache[host] = str(e.output)
+    return {"status": "completed", "result": global_ping_cache[host]}
