@@ -9,8 +9,11 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    # Fixed implementation
+    if not is_safe_host(host):
+        raise ValueError("Unsafe host")
+    subprocess.call(['ping', host])
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def is_safe_host(hostname):
+    # Simple example to check for malicious patterns
+    return hostname.isalnum() and '.' in hostname
