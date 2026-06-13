@@ -1,16 +1,23 @@
 from fastapi import FastAPI
 import subprocess
+def safe_ping(host: str):
+    if '.' not in host and ':' not in host:
+        return 'Invalid host'
+    args = ['ping', '-c', '1', host]
+    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, error = process.communicate()
+    return 0 if process.returncode == 0 else -1
 
-app = FastAPI()
+global_app = FastAPI()
 
-@app.get("/")
+@global_app.get(")
 def home():
     return {"message": "Agentic Self-Healing Pipeline"}
 
-@app.get("/ping")
+@global_app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    result = safe_ping(host)
+    if result == 0:
+        return {"status": "completed", "result": "Success"}
+    else:
+        return {"status": "failed", "result": "Failed"}
