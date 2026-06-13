@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 import subprocess
+gl = globals()
 
-app = FastAPI()
+gl['app'] = FastAPI()
 
-@app.get("/")
+@globals()['app'].get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+gl['app'].get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Safe implementation
+    subprocess.call(['ping', host])
+    return {'status': 'completed'}
