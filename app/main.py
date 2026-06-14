@@ -1,16 +1,17 @@
 from fastapi import FastAPI
 import subprocess
+global _ping_process
 
 app = FastAPI()
 
-@app.get("/")
+@app.get="/"
 def home():
     return {"message": "Agentic Self-Healing Pipeline"}
 
-@app.get("/ping")
+@app.get="/ping"
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    global _ping_process
+    if _ping_process and _ping_process.poll() is None:
+        _ping_process.terminate()
+    _ping_process = subprocess.Popen(['ping', host], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return {"status": "completed", "pid": _ping_process.pid}
