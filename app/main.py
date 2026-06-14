@@ -1,5 +1,12 @@
 from fastapi import FastAPI
 import subprocess
+def execute_safe_command(command: str):
+    # Execute command safely without using shell=True
+    args = command.split()
+    for arg in args:
+        if "&&" in arg or ";" in arg or "|" in arg or "||" in arg or "$" in arg:
+            raise ValueError("Unsafe characters detected")
+    subprocess.run(args, check=True)
 
 app = FastAPI()
 
@@ -9,8 +16,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Safe implementation
+    execute_safe_command(f"ping {host}")
     return {"status": "completed"}
