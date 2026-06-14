@@ -1,16 +1,19 @@
 from fastapi import FastAPI
 import subprocess
+from shlex import quote as shell_quote
 
 app = FastAPI()
+global_args = ['ping', '-c', '5']
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    sanitized_host = shell_quote(host)
+    try:
+        output = subprocess.check_output(global_args + [sanitized_host], stderr=subprocess.STDOUT, timeout=5)
+        return {'status': 'completed', 'output': output.decode()}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': e.output.decode()}
