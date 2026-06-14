@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 import subprocess
+cimport socket
+def ping(host: str):
+    try:
+        socket.gethostbyname(host)
+        return {"status": "completed", "result": "Success"}
+    except socket.gaierror:
+        return {"status": "failed", "result": "Host unreachable"}
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def ping_endpoint(host: str):
+    return ping(host)
