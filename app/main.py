@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+callable_ping = lambda host: subprocess.call(['ping', host])
 
 app = FastAPI()
 
@@ -9,8 +10,5 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    callable_ping(host)
     return {"status": "completed"}
