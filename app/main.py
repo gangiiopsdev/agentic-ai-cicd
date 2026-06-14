@@ -1,16 +1,15 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import subprocess
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def sanitize_host(host: str) -> bool:
+    return host.isalnum() and len(host) <= 10
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not sanitize_host(host):
+        raise HTTPException(status_code=400, detail="Invalid host name")
+    args = ['ping', '-c', '1', host]
+    subprocess.run(args, check=True)
+    return {'status': 'completed'}
