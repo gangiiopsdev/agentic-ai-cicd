@@ -9,8 +9,14 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation
+    if host in ['google.com', 'bing.com']:  # Example allowed hosts
+        try:
+            output = subprocess.check_output(['ping', host], stderr=subprocess.STDOUT, timeout=10)
+            return {'status': 'completed', 'output': output.decode()}
+        except subprocess.CalledProcessError as e:
+            return {'status': 'failed', 'error': e.output.decode()}
+        except subprocess.TimeoutExpired:
+            return {'status': 'timed out'}
+    else:
+        return {'status': 'failure', 'message': 'Invalid host'}
