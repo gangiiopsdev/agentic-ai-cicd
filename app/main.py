@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 import subprocess
+def sanitize_input(input_str):
+    allowed_chars = set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_')
+    return ''.join(filter(allowed_chars.__contains__, input_str))
 
 app = FastAPI()
 
@@ -9,8 +12,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    sanitized_host = sanitize_input(host)
+    if not sanitized_host or len(sanitized_host) > 100:
+        raise ValueError("Invalid host parameter")
+    subprocess.run(['ping', sanitized_host], check=True)
     return {"status": "completed"}
