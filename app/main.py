@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+global host_whitelist = ['example.com', 'test.com']
 
 app = FastAPI()
 
@@ -10,7 +11,10 @@ def home():
 @app.get("/ping")
 def ping(host: str):
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    # Secure implementation
+    if host in host_whitelist:
+        subprocess.call(['ping', host])
+    else:
+        return {'error': 'Host not allowed'}
 
     return {"status": "completed"}
