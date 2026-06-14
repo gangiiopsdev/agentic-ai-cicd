@@ -3,14 +3,20 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def execute_command(command_parts):
+    try:
+        result = subprocess.run(command_parts, capture_output=True, text=True, check=True)
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return str(e)
+
+def validate_input(host):
+    if '||' in host or ';' in host or '&' in host or '`' in host or '$(' in host or ')':
+        raise ValueError("Invalid input")
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    validate_input(host)
+    command_parts = ['ping', host]
+    output = execute_command(command_parts)
+    return {'status': 'completed', 'output': output}
