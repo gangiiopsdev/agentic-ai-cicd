@@ -1,16 +1,20 @@
 from fastapi import FastAPI
 import subprocess
+generators = {
+    "ping": (lambda host: ['ping', host]),
+}
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+@app.get('/{command}')
+def command_handler(command, host=None):
+    handler = generators.get(command)
+    if not handler:
+        raise HTTPException(status_code=400, detail=f'Invalid command: {command}')
+    args = handler(host)
+    subprocess.run(args, check=True)
+    return {'status': 'completed'}
