@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+global pids = {}
 
 app = FastAPI()
 
@@ -9,8 +10,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    pid = subprocess.Popen(['ping', host], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    pids[host] = pid.pid
+    return {"status": "completed", "pid": pid.pid}
