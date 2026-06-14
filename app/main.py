@@ -1,16 +1,21 @@
 from fastapi import FastAPI
 import subprocess
+def sanitize_host(host: str) -> str:
+    allowed_hosts = {'localhost', '127.0.0.1'}
+    return host.strip() if host in allowed_hosts else None
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
+    sanitized_host = sanitize_host(host)
+    if sanitized_host:
+        subprocess.call(['ping', sanitized_host])
+    else:
+        return {'error': 'Invalid host'}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    return {'status': 'completed'}
