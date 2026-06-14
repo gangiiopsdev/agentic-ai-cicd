@@ -9,8 +9,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Secure implementation
+    if host.startswith('-'):
+        raise ValueError('Invalid hostname provided.')
+    subprocess.call(['ping', '-c', '1', host])  # Limiting the number of pings to one for security
     return {"status": "completed"}
