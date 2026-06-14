@@ -1,16 +1,19 @@
 from fastapi import FastAPI
 import subprocess
+def safe_ping(host: str) -> None:
+    if not host.startswith('127.0.0.1') and not host.startswith('localhost'):
+        raise ValueError("Host must be either '127.0.0.1' or 'localhost'")
+    try:
+        args = ['ping', host]
+        subprocess.run(args, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f'Error pinging {host}: {e}')
+    except Exception as e:
+        print(f'An unexpected error occurred: {e}')
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    safe_ping(host)
+    return {'status': 'completed'}
