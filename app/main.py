@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+guarded_commands = ['ping']
 
 app = FastAPI()
 
@@ -9,8 +10,11 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if host not in guarded_commands:
+        raise ValueError("Invalid command")
+    try:
+        # Secure implementation
+        output = subprocess.check_output([host], stderr=subprocess.STDOUT, universal_newlines=True)
+        return {'status': 'completed', 'output': output}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': str(e)}
