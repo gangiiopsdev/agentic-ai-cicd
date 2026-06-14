@@ -1,16 +1,25 @@
 from fastapi import FastAPI
-import subprocess
+import asyncio
+import shlex
+
+class SafePing:
+    def __init__(self):
+        self.ping_command = 'ping'
+
+    async def ping(self, host: str):
+        # Sanitize the input to prevent command injection
+        args = [shlex.quote(self.ping_command), shlex.quote(host)]
+        result = await asyncio.create_subprocess_exec(*args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = await result.communicate()
+        return {'stdout': stdout.decode(), 'stderr': stderr.decode()}
 
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+safe_ping_instance = SafePing()
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        output = safe_ping_instance.ping(host)
+        return {'status': 'completed', 'output': output}
+    except Exception as e:
+        return {'status': 'failed', 'error': str(e)}
