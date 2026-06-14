@@ -1,16 +1,23 @@
 from fastapi import FastAPI
-import subprocess
+import os
+import socket
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
+    try:
+        # Validate the host to ensure it's a valid IP address or hostname
+        socket.inet_pton(socket.AF_INET, host)
+    except (socket.error, ValueError):
+        return {'status': 'failed', 'error': 'Invalid IP address'}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        output = subprocess.run(['ping', '-c', '1', host], capture_output=True, text=True, check=True)
+        return {'status': 'completed', 'output': output.stdout}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': str(e)}
