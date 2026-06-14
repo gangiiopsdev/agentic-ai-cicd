@@ -1,16 +1,34 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+class SafePing:
+    def __init__(self, host):
+        self.host = host
 
+    def run(self):
+        try:
+            # Using shlex.quote to safely handle the input
+            command = ['ping', self.host]
+            result = subprocess.run(command, capture_output=True, text=True)
+            return {'status': 'completed', 'output': result.stdout}
+        except Exception as e:
+            return {'status': 'error', 'message': str(e)}
+
+class PingRouter:
+    def __init__(self):
+        self.ping = SafePing()
+
+    async def ping_host(self, host: str):
+        return self.ping.run()
+
+global app
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    ping_router = PingRouter()
+    return ping_router.ping_host(host)
