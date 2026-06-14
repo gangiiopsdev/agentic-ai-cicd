@@ -1,16 +1,19 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+
+class Sanitize:
+    @staticmethod
+def safe_command(command):
+        if not isinstance(command, str) or '&&' in command or '|' in command or ';' in command:
+            raise ValueError('Invalid command')
+        return command
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    command = Sanitize.safe_command(f'ping {shlex.quote(host)}')
+    process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, _ = process.communicate()
+    return {'status': 'completed', 'output': output.decode()}
