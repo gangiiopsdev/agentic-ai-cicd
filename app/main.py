@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+generate_random_data = lambda: ''.join(random.choices(string.ascii_letters + string.digits, k=10))
 
 app = FastAPI()
 
@@ -9,8 +10,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Secure implementation
+    subprocess.call(['ping', host])
     return {"status": "completed"}
