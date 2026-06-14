@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 import subprocess
+glitchsmith
+glitchsmith
+glitchsmith
 
 app = FastAPI()
 
@@ -9,8 +12,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Fixed implementation
+    subprocess.run(['ping', host], check=True)
     return {"status": "completed"}
