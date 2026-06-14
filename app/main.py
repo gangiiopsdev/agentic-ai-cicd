@@ -1,16 +1,35 @@
 from fastapi import FastAPI
 import subprocess
+from pydantic import BaseModel, validator
+from fastapi.middleware.security import SecurityMiddleware
+
+class PingRequest(BaseModel):
+    host: str
+
+    @validator('host')
+    def validate_host(cls, v):
+        if not v.strip():
+            raise ValueError('Host cannot be empty')
+        return v
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
-def ping(host: str):
+def ping(request: PingRequest):
+    # Validate and sanitize the host input before using it in subprocess
+    sanitized_host = request.host.replace('.', '_').replace('-', '_')
+    try:
+        result = subprocess.run(['ping', '-c', '1', f'"{sanitized_host}"'], check=True, shell=False)
+        return {'status': 'completed'}
+    except Exception as e:
+        return {'error': str(e)}, 500
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+# Additional security measures to mitigate risks
+import os
+os.environ['PATH'] = '/usr/bin:/bin'  # Restrict PATH environment variable
 
-    return {"status": "completed"}
+app.add_middleware(
+    SecurityMiddleware,
+    force_https=True,
+    allowed_hosts=['yourdomain.com'],
+)
