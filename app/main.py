@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+from starlette.exceptions import HTTPException
 
+global app
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if not host.isdigit():
+        raise HTTPException(status_code=400, detail="Invalid input")
+    args = shlex.split(f'ping {host}')
+    subprocess.run(args, check=True)
     return {"status": "completed"}
