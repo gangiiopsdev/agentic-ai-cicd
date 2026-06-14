@@ -1,16 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import subprocess
-
+import shlex
+global host
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if not host.strip():
+        raise HTTPException(status_code=400, detail="Host parameter is required")
+    command = ['ping', '-c', '4', shlex.quote(host)]
+    subprocess.run(command, check=True)
     return {"status": "completed"}
