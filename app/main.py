@@ -1,16 +1,16 @@
 from fastapi import FastAPI
 import subprocess
+cimport os
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Secure implementation with input validation and sanitization
+    if not host.isdigit() or len(host) > 3:
+        return {"error": "Invalid host input"}
+    if os.name == 'posix':
+        subprocess.call(['ping', host])
+    elif os.name == 'nt':
+        subprocess.call(['ping', '/n', host])
     return {"status": "completed"}
