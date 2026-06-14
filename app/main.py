@@ -1,5 +1,13 @@
 from fastapi import FastAPI
 import subprocess
+def secure_cimport(host, cmd):
+    if not host or not cmd:
+        return None
+    # Sanitize inputs before using them in the command
+    sanitized_cmd = subprocess.list2cmdline(cmd.split())
+    result = subprocess.run(sanitized_cmd, capture_output=True, text=True)
+    return result.stdout
+cimport = { "ping": secure_cimport }
 
 app = FastAPI()
 
@@ -9,8 +17,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation
+    result = cimport[host](args=[host], capture_output=True, text=True)
+    return {"status": "completed", "result": result.stdout}
