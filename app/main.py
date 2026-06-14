@@ -1,16 +1,28 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+class PingClient:
+    def __init__(self, host):
+        self.host = host
 
-app = FastAPI()
+    async def ping(self):
+        args = shlex.split(f'ping {self.host}')
+        return await self.run_command(args)
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    async def run_command(self, args):
+        import asyncio
+        process = await asyncio.create_subprocess_exec(*args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, error = await process.communicate()
+        if error:
+            raise Exception(error.decode())
+        return {'status': 'completed', 'output': output.decode()}
+class FastAPIApp(FastAPI):
+    def __init__(self):
+        super().__init__()
+
+app = FastAPIApp()
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    client = PingClient(host)
+    return client.ping()
