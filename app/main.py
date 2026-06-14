@@ -1,16 +1,17 @@
 from fastapi import FastAPI
 import subprocess
+class SafeHostValidator:
+    @staticmethod
+def is_safe_host(host: str) -> bool:
+        return host.isalnum() and '..' not in host
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def ping(host: str):
+    if not SafeHostValidator.is_safe_host(host):
+        raise ValueError('Invalid host name')
+    subprocess.run(['ping', host], check=True)
 
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def ping_endpoint(host: str):
+    return {'result': ping(host)}
