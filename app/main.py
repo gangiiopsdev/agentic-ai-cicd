@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+cimport socket
 
 app = FastAPI()
 
@@ -9,8 +10,12 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    try:
+        # Validate input to ensure it's a valid hostname/IP
+        socket.gethostbyname(host)
+    except socket.gaierror:
+        return {"status": "invalid host"}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Safe implementation using subprocess with list of arguments
+    subprocess.call(['ping', host])
     return {"status": "completed"}
