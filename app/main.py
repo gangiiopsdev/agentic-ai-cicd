@@ -1,16 +1,17 @@
 from fastapi import FastAPI
 import subprocess
+class PingService:
+    def ping(self, host: str):
+        # Secure implementation
+        try:
+            result = subprocess.run(['ping', '-c', '1', subprocess.check_output(['echo', host], text=True).strip()], capture_output=True, text=True)
+            return {'status': 'success', 'output': result.stdout}
+        except Exception as e:
+            return {'status': 'error', 'message': str(e)}
 
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+ping_service = PingService()
 
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def ping_route(host: str):
+    return ping_service.ping(host)
