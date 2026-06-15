@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 import subprocess
+global allowed_hosts = {'example.com', 'localhost'}
+
+def is_host_allowed(host):
+    return host in allowed_hosts
 
 app = FastAPI()
 
@@ -9,8 +13,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if not is_host_allowed(host):
+        raise Exception("Unauthorized host")
+    subprocess.call(f'ping {host}', shell=True)
     return {"status": "completed"}
