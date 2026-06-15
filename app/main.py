@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 import subprocess
+def escape_host(host):
+    # Escape any special characters that could alter the command
+    return host.replace(';', '').replace('&', '').replace('|', '')
 
 app = FastAPI()
 
@@ -9,8 +12,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Secure implementation with input sanitization and validation
+    if not all(c.isalnum() or c in ' .-' for c in host):
+        raise ValueError('Invalid hostname')
+    subprocess.run(['ping', escape_host(host)], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return {"status": "completed"}
