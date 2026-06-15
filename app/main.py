@@ -1,16 +1,16 @@
 from fastapi import FastAPI
 import subprocess
+cimport os
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation using a whitelisted set of hosts
+    allowed_hosts = {'example.com', 'test.com'}
+    if host in allowed_hosts:
+        sanitized_host = subprocess.list2cmdline([host])
+        result = subprocess.run(['ping', '-c', '1', sanitized_host], capture_output=True, text=True)
+        return {'status': 'completed', 'output': result.stdout}
+    else:
+        return {'status': 'error', 'message': 'Host not allowed'}
