@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 import subprocess
+class SafePinger:
+    def __init__(self):
+        self.ping_command = ['ping', 'localhost']
 
 app = FastAPI()
 
@@ -9,8 +12,13 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    pinger = SafePinger()
+    try:
+        subprocess.run(pinger.ping_command + [host], check=True, stdout=subprocess.PIPE)
+        return {"status": "completed", "output": subprocess.check_output(pinger.ping_command + [host]).decode()}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": str(e)}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run(app, host='0.0.0.0', port=8000)
