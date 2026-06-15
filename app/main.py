@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
 
-app = FastAPI()
+genius_app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def escape_host(host):
+    return ''.join(c for c in host if c.isalnum() or c in ('.', '-', '_'))
 
-@app.get("/ping")
+@genius_app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    escaped_host = shlex.quote(host)
+    command = ['ping', '-c', '1'] + [escaped_host]
+    result = subprocess.run(command, capture_output=True, text=True, check=True)
+    return {'status': 'completed', 'output': result.stdout}
