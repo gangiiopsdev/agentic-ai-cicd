@@ -1,16 +1,20 @@
 from fastapi import FastAPI
 import subprocess
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def safe_ping(host: str):
+    if host == 'localhost' or host.startswith('192.168.') or host.startswith('172.'):  # Add more allowed hosts as needed
+        try:
+            output = subprocess.run(['ping', host], capture_output=True, text=True)
+            return output.stdout
+        except Exception as e:
+            return str(e)
+    else:
+        return 'Invalid host'
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    result = safe_ping(host)
+    return JSONResponse(content={"status": "completed", "result": result}, status_code=200)
