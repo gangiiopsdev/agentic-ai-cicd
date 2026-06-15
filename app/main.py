@@ -1,7 +1,12 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
 
 app = FastAPI()
+
+def validate_host(host):
+    allowed_hosts = ['127.0.0.1', '::1']  # Example list of allowed hosts
+    return host in allowed_hosts
 
 @app.get("/")
 def home():
@@ -9,8 +14,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if validate_host(host):
+        subprocess.call(shlex.split(f'ping {host}'))  # Use shlex to safely split the command
+        return {"status": "completed"}
+    else:
+        return {"status": "failed", "reason": "Invalid host"}
