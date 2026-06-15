@@ -1,16 +1,25 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+from pydantic import BaseModel, validator
+
+class PingRequest(BaseModel):
+    host: str
+
+    @validator('host')
+    def validate_host(cls, v):
+        if not v.isalnum() or len(v) > 255:
+            raise ValueError('Invalid host name')
+        return v
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/', response_model=BaseModel)
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+@app.post('/ping', response_model=BaseModel)
+def ping(request: PingRequest):
+    args = shlex.split(f'ping {request.host}')
+    subprocess.run(args, check=True)
+    return {'status': 'completed'}
