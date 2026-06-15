@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 import subprocess
+from shlex import quote
+generate_ping_command = lambda host: ["ping", quote(host)]
 
 app = FastAPI()
 
@@ -9,8 +11,9 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    try:
+        subprocess.run(generate_ping_command(host), check=True)
+    except subprocess.CalledProcessError as e:
+        return {"status": "error", "message": str(e)}
 
     return {"status": "completed"}
