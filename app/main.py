@@ -1,16 +1,32 @@
 from fastapi import FastAPI
 import subprocess
+from urllib.parse import urlparse
+def escape_command(cmd):
+    return [arg.replace(';', '').replace('&', '') for arg in cmd]
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
+    # Validate input to prevent command injection
+    try:
+        parsed_url = urlparse(host)
+        if not parsed_url.hostname:
+            raise ValueError('Invalid hostname')
+        output = subprocess.run(escape_command(['ping', parsed_url.hostname]), capture_output=True, text=True, check=True)
+        return {'status': 'completed', 'output': output.stdout}
+    except (subprocess.CalledProcessError, ValueError) as e:
+        return {'status': 'failed', 'error': str(e)}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+# Secure fix using subprocess.Popen with shell=False and executable=None
+@app.get('/ping_secure')
+def ping_secure(host: str):
+    # Validate input to prevent command injection
+    try:
+        parsed_url = urlparse(host)
+        if not parsed_url.hostname:
+            raise ValueError('Invalid hostname')
+        output = subprocess.Popen(['ping', parsed_url.hostname], capture_output=True, text=True, executable=None)
+        return {'status': 'completed', 'output': output.stdout}
+    except (subprocess.CalledProcessError, ValueError) as e:
+        return {'status': 'failed', 'error': str(e)}
