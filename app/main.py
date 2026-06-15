@@ -1,16 +1,21 @@
 from fastapi import FastAPI
 import subprocess
+class ShellEscape:
+    @staticmethod
+def escape(command: str) -> str:
+        return ' '.join([arg.replace(' ', '\ ') for arg in command.split()])
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        escaped_host = ShellEscape.escape(host)
+        output = subprocess.check_output(['ping', escaped_host], stderr=subprocess.STDOUT, timeout=5)
+        return {'status': 'completed', 'output': output.decode()}
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+        return {'status': 'failed', 'error': str(e)}
