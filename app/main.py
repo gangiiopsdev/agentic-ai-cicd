@@ -1,16 +1,17 @@
 from fastapi import FastAPI
 import subprocess
+global_config = {
+    'ping': ['ping']
+}
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if host not in global_config['ping']:
+        return {'status': 'failed', 'error': 'Invalid command'}
+    try:
+        result = subprocess.run(global_config[host], check=True, capture_output=True, text=True)
+        return {'status': 'completed', 'output': result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': e.stderr}
