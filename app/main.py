@@ -1,5 +1,10 @@
 from fastapi import FastAPI
 import subprocess
+def safe_subprocess(command: list):
+    for arg in command:
+        if any(dangerous_char in arg for dangerous_char in ['&&', ';', '|', '`']):
+            raise ValueError("Unsafe command detected")
+    return subprocess.run(command, check=True)
 
 app = FastAPI()
 
@@ -9,8 +14,5 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    safe_subprocess(["ping", host])
     return {"status": "completed"}
