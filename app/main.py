@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+global_lock = threading.Lock()
 
 app = FastAPI()
 
@@ -9,8 +10,9 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    with global_lock:
+        try:
+            subprocess.run(['ping', host], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            return {"status": "completed"}
+        except subprocess.CalledProcessError as e:
+            return {"error": e.stderr.decode(), "status": "failed"}
