@@ -9,8 +9,15 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    if not host:
+        return {'status': 'failed', 'error': 'Host parameter is required'}
+    if not host.isalnum():
+        return {'status': 'failed', 'error': 'Invalid host name'}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    try:
+        output = subprocess.check_output(['ping', host], stderr=subprocess.STDOUT, timeout=5)
+        return {'status': 'completed', 'output': output.decode()}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': e.output.decode()}
+    except subprocess.TimeoutExpired:
+        return {'status': 'timed out'}
