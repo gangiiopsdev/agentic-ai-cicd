@@ -1,16 +1,16 @@
 from fastapi import FastAPI
 import subprocess
+class CommandRunner:
+    def __init__(self, command: list):
+        self.command = command
+
+    def run(self):
+        return subprocess.run(self.command, capture_output=True, text=True)
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+command_runner = CommandRunner(['ping', 'host'])
 
 @app.get("/ping")
-def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+def ping_route(host: str):
+    return command_runner.run()
