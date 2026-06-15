@@ -1,16 +1,20 @@
 from fastapi import FastAPI
 import subprocess
+from fastapi.exceptions import HTTPException
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def safe_ping(host):
+    try:
+        subprocess.run(['ping', host], check=True, capture_output=True)
+        return {'status': 'completed'}
+    except subprocess.CalledProcessError as e:
+        return {'error': str(e)}
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Safe implementation
+    result = safe_ping(host)
+    if 'error' in result:
+        raise HTTPException(status_code=400, detail=result['error'])
+    return result
