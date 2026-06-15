@@ -1,16 +1,19 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+import re
+
+global_blacklist = set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_')
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def validate_host(host):
+    return all(char in global_blacklist for char in host)
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if not validate_host(host):
+        raise ValueError("Invalid host name")
+    args = shlex.split(f'ping {host}')  # Removed shlex.quote to avoid shell injection
+    subprocess.run(args, check=True)
     return {"status": "completed"}
