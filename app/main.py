@@ -9,8 +9,9 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Secure implementation with input validation and sanitization
+    if not host or not all(c.isalnum() or c in ('-', '.', ':', ';') for c in host):
+        return {"status": "invalid_host"}
+    args = ['ping', host]
+    subprocess.run(args, check=True)
     return {"status": "completed"}
