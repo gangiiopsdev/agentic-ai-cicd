@@ -9,8 +9,12 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    try:
+        output = subprocess.check_output(['ping', host], timeout=5, stderr=subprocess.STDOUT)
+        return {'status': 'completed', 'output': output.decode()}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': e.output.decode()}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
