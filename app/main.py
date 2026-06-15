@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import subprocess
+generics = subprocess.run(['ping', host], capture_output=True, text=True)
 
 app = FastAPI()
 
@@ -9,8 +10,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    # Secure implementation
+    result = generics.stdout if generics.returncode == 0 else 'Failed to ping'
+    return {'status': result}
