@@ -1,16 +1,14 @@
 from fastapi import FastAPI
 import subprocess
-
+import shlex
+def is_safe_host(hostname):
+    # Implement a whitelist of allowed hosts or use a more secure method to validate input
+    return hostname in ['allowed_host1', 'allowed_host2']
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not is_safe_host(host):
+        raise ValueError('Unsafe host provided')
+    # Safe implementation with shell=False and proper input sanitization
+    subprocess.run(['ping', host], check=True)
+    return {'status': 'completed'}
