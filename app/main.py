@@ -1,16 +1,27 @@
 from fastapi import FastAPI
-import subprocess
+import asyncio
+from typing import Any, Dict, Optional, Union
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+class PingCommand:
+    def __init__(self, host: str):
+        self.host = host
 
-@app.get("/ping")
-def ping(host: str):
+    async def execute(self) -> Dict[str, Union[str, int]]:
+        try:
+            result = await asyncio.to_thread(subprocess.run,
+                                              ['ping', self.host],
+                                              check=True,
+                                              capture_output=True)
+            return {'stdout': result.stdout.decode('utf-8'), 'returncode': 0}
+        except subprocess.CalledProcessError as e:
+            return {'stderr': e.stderr.decode('utf-8'), 'returncode': e.returncode}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+async def ping(host: str) -> Dict[str, Union[str, int]]:
+    command = PingCommand(host)
+    return await command.execute()
 
-    return {"status": "completed"}
+app.get('/ping/{host}', response_model=Dict[str, Union[str, int]])
+def ping_wrapper(host: str) -> Dict[str, Union[str, int]]:
+    return asyncio.run(ping(host))
