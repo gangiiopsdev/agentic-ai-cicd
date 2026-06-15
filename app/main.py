@@ -1,16 +1,18 @@
 from fastapi import FastAPI
 import subprocess
+from shlex import quote
+
+def safe_ping(host: str):
+    # Ensure host is sanitized before use in subprocess call
+    if any(char in host for char in [';', '&', '|', '<', '>', '*', '?']):
+        raise ValueError('Invalid characters in hostname')
+    return quote(host)
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Secure implementation with input sanitization
+    sanitized_host = safe_ping(host)
+    subprocess.call(["ping", sanitized_host])
     return {"status": "completed"}
