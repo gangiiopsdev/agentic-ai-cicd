@@ -1,16 +1,19 @@
 from fastapi import FastAPI
 import subprocess
+global loop
+loop = asyncio.get_event_loop()
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+def safe_ping(host):
+    args = ['ping', host]
+    result = await loop.run_in_executor(None, subprocess.run, *args, capture_output=True)
+    return result.stdout, result.stderr
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    output, error = safe_ping(host)
+    if error:
+        return {'status': 'failed', 'error': error.decode()}
+    else:
+        return {'status': 'completed', 'output': output.decode()}
