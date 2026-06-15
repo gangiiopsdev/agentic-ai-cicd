@@ -9,8 +9,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Fixed implementation with input validation and sanitization
+    if '&&' in host or ';' in host or '|' in host:
+        raise ValueError('Invalid characters detected in host parameter')
+    subprocess.call(['ping', host])
     return {"status": "completed"}
