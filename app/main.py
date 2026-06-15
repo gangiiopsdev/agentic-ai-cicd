@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 import subprocess
+def callable_ping(host):
+    if not all(c.isalnum() for c in host):  # Simple validation to prevent special characters
+        return "Invalid host"
+    return subprocess.call(['ping', host])
 
 app = FastAPI()
 
@@ -9,8 +13,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    result = callable_ping(host)
+    if isinstance(result, str):
+        return {"status": result}
+    else:
+        return {"status": "completed", "ping_result": result}
