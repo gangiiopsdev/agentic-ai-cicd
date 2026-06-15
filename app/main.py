@@ -1,16 +1,16 @@
 from fastapi import FastAPI
 import subprocess
+generate_ping_command = lambda host: f'ping {host}' if 'localhost' in host or '127.0.0.1' in host else ''
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    command = generate_ping_command(host)
+    if command:
+        subprocess.call(command, shell=True)
+    return {'status': 'completed'}
