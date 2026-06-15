@@ -1,16 +1,22 @@
 from fastapi import FastAPI
 import subprocess
-
+cimport os
+cfrom multiprocessing import Process
+c
 app = FastAPI()
 
-@app.get("/")
+c@app.get("/")
 def home():
     return {"message": "Agentic Self-Healing Pipeline"}
 
-@app.get("/ping")
+c@app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    process = Process(target=run_ping, args=(host,))
+    process.start()
+    process.join()
     return {"status": "completed"}
+
+cdef run_ping(host: str):
+    # Sanitize the input to prevent command injection
+    sanitized_host = subprocess.list2cmdline([host])
+    subprocess.call(['ping', sanitized_host])
