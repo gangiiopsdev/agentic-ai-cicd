@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 import subprocess
+def escape_user_input(user_input):
+    return ''.join(c for c in user_input if c.isalnum() or c in '._-')
 
 app = FastAPI()
 
@@ -9,8 +11,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Secure implementation
+    safe_host = escape_user_input(host)
+    subprocess.call(["ping", safe_host])
     return {"status": "completed"}
