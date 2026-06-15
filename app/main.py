@@ -3,14 +3,19 @@ import subprocess
 
 app = FastAPI()
 
+def ping(host: str):
+    # Safe implementation using subprocess.run
+    result = subprocess.run(['ping', host], capture_output=True, text=True)
+    return {'status': 'completed', 'stdout': result.stdout, 'stderr': result.stderr}
+
 @app.get("/")
 def home():
     return {"message": "Agentic Self-Healing Pipeline"}
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if host.startswith('192.168.') or host == 'localhost':  # Example of whitelisting trusted hosts
+        result = subprocess.run(['ping', host], capture_output=True, text=True)
+        return {'status': 'completed', 'stdout': result.stdout, 'stderr': result.stderr}
+    else:
+        return {'status': 'error', 'message': 'Invalid host'}, 403
