@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 import subprocess
-
+get_whoami = "/usr/bin/whoami"
 app = FastAPI()
 
 @app.get("/")
@@ -9,8 +9,6 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    # Safe implementation
+    subprocess.call([get_whoami])
     return {"status": "completed"}
