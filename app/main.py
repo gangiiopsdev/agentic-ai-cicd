@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 import subprocess
+def safe_ping(host):
+    if not host.isnumeric():
+        return 'Invalid input'
+    return subprocess.run(['ping', host], capture_output=True, text=True).stdout
 
 app = FastAPI()
 
@@ -9,8 +13,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    result = safe_ping(host)
+    if isinstance(result, str) and 'Invalid input' in result:
+        return {'status': 'error', 'message': result}
+    return {'status': 'completed', 'result': result}
