@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 import subprocess
+global completed
+completed = False
 
 app = FastAPI()
 
@@ -9,8 +11,8 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    global completed
+    if not completed:
+        subprocess.call(f"ping {host}", shell=True)
+        completed = True
     return {"status": "completed"}
