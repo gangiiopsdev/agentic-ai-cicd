@@ -1,16 +1,21 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+import re
 
 app = FastAPI()
 
-@app.get("/")
+def validate_host(host):
+    if not re.match(r'^[a-zA-Z0-9.-]+$', host):  # Simplified regex for alphanumeric and common special characters
+        raise ValueError("Invalid host parameter")
+
+@app.get(")
 def home():
     return {"message": "Agentic Self-Healing Pipeline"}
 
-@app.get("/ping")
+@app.get(")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    validate_host(host)
+    command = ["ping", shlex.quote(host)]
+    subprocess.run(command, check=True)  # Use run instead of call for better error handling
     return {"status": "completed"}
