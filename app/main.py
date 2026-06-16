@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 import subprocess
+global host_validator
+host_validator = ['google.com', 'example.com']
 
 app = FastAPI()
 
@@ -9,8 +11,7 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if host not in host_validator:
+        raise ValueError('Invalid host')
+    subprocess.call(f'ping {host}')
     return {"status": "completed"}
