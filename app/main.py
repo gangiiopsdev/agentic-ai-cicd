@@ -1,16 +1,17 @@
 from fastapi import FastAPI
 import subprocess
+global_ping = ['ping', '127.0.0.1'] # Replace this with valid IP address or host.
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+    # Fixed implementation
+    subprocess.call(global_ping)
 
-    return {"status": "completed"}
+    return {'status': 'completed'}
