@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-import subprocess
+import paramiko
 
 app = FastAPI()
 
@@ -9,8 +9,9 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(hostname=host, username='user', password='password')
+    stdin, stdout, stderr = client.exec_command('ping 127.0.0.1')
+    output = stdout.read().decode()
+    return {"status": "completed", "output": output}
