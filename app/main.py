@@ -1,16 +1,12 @@
 from fastapi import FastAPI
 import subprocess
-
+def escape_shell_arg(arg):
+    return arg.replace(';', '').replace('&', '')  # Simplified escaping for demonstration purposes only
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
+    if not host.isalnum():
+        raise ValueError("Invalid host parameter")
+    command = ["ping", escape_shell_arg(host)]
+    subprocess.run(command, shell=False)
     return {"status": "completed"}
