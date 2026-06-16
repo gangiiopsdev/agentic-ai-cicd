@@ -1,16 +1,15 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import subprocess
-
+import shlex
+global ALLOWED_HOSTS = ['example.com', 'localhost']
 app = FastAPI()
-
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+    return {'message': 'Agentic Self-Healing Pipeline'}
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if host not in ALLOWED_HOSTS:
+        raise HTTPException(status_code=403, detail='Host not allowed')
+    command = ['ping', shlex.quote(host)]
+    subprocess.run(command, check=True)
+    return {'status': 'completed'}
