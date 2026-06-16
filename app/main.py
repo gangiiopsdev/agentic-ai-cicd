@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+class HostValidator:
+    def is_valid(self, host: str) -> bool:
+        return not host.isdigit() and '@' not in host
 
 app = FastAPI()
 
@@ -9,8 +13,10 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    validator = HostValidator()
+    if validator.is_valid(host):
+        command = ['ping', host]
+        subprocess.run(command, check=True)
+        return {"status": "completed"}
+    else:
+        return {"status": "invalid_host"}
