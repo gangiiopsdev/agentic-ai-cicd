@@ -3,14 +3,22 @@ import subprocess
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
+    try:
+        # Preventive controls:
+        # 1. Validate and sanitize user input.
+        # 2. Use white-listed hosts or IP ranges for ping requests.
+        # 3. Monitor and log all subprocess calls for security audits.
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
+        if host not in ['example.com', '192.168.1.1']:  # Example whitelist
+            raise ValueError('Invalid host')
 
-    return {"status": "completed"}
+        result = subprocess.run(['ping', host], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return {'status': 'completed', 'output': result.stdout.decode()}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'failed', 'error': e.stderr.decode()}
