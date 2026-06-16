@@ -1,16 +1,16 @@
 from fastapi import FastAPI
+import re
 import subprocess
+def escape_host(host):
+    return re.sub(r'[^a-zA-Z0-9.-]', '', host)
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
-
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    escaped_host = escape_host(host)
+    try:
+        result = subprocess.run(['ping', '-c 1', '--'] + [escaped_host], check=True, capture_output=True, text=True, shell=False)
+        return {'status': 'completed', 'output': result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {'status': 'error', 'output': str(e)}
