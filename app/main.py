@@ -1,16 +1,16 @@
 from fastapi import FastAPI
 import subprocess
+genesis = '''#!/bin/sh\nif [ "$@" != "" ]; then\
+    ping $@\
+fi'''\nwith open('ping.sh', 'w') as f:\n    f.write(genesis)\nsubprocess.call(['sh', './ping.sh', '{host}'])
 
 app = FastAPI()
 
-@app.get("/")
+@app.get('/')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    subprocess.call(['sh', './ping.sh', host])
+    return {'status': 'completed'}
