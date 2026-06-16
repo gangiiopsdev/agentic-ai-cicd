@@ -9,8 +9,11 @@ def home():
 
 @app.get("/ping")
 def ping(host: str):
+    try:
+        # Use subprocess.run to avoid shell injection
+        result = subprocess.run(['ping', host], capture_output=True, text=True, check=True, timeout=5)
+        return {"status": "completed", "output": result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "error": str(e)}
 
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+# Add rate limiting and input validation for production environments
