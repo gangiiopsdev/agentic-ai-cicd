@@ -1,16 +1,21 @@
 from fastapi import FastAPI
 import subprocess
+import shlex
+import asyncio
 
 app = FastAPI()
 
-@app.get("/")
+async def secure_ping(host):
+    args = ['ping', host]
+    await asyncio.create_subprocess_exec(*args, check=True)
+
+@app.get('/home')
 def home():
-    return {"message": "Agentic Self-Healing Pipeline"}
+    return {'message': 'Agentic Self-Healing Pipeline'}
 
-@app.get("/ping")
+@app.get('/ping')
 def ping(host: str):
-
-    # Vulnerable implementation
-    subprocess.call(f"ping {host}", shell=True)
-
-    return {"status": "completed"}
+    if not host.isdigit() or len(host) != 3:
+        raise ValueError('Invalid host input')
+    await secure_ping(host)
+    return {'status': 'completed'}
